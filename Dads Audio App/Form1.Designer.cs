@@ -60,6 +60,7 @@
             editingCheckBox = new CheckBox();
             fontDialog1 = new FontDialog();
             fontButton = new Button();
+            flagTextCoolDown = new System.Windows.Forms.Timer(components);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
@@ -68,9 +69,10 @@
             // 
             // playButton
             // 
-            playButton.Location = new Point(28, 478);
+            playButton.Location = new Point(32, 637);
+            playButton.Margin = new Padding(3, 4, 3, 4);
             playButton.Name = "playButton";
-            playButton.Size = new Size(75, 23);
+            playButton.Size = new Size(86, 31);
             playButton.TabIndex = 0;
             playButton.Text = "Play";
             playButton.UseVisualStyleBackColor = true;
@@ -85,9 +87,10 @@
             // audioTrackLocationProgressBar
             // 
             audioTrackLocationProgressBar.ForeColor = SystemColors.MenuHighlight;
-            audioTrackLocationProgressBar.Location = new Point(29, 36);
+            audioTrackLocationProgressBar.Location = new Point(33, 48);
+            audioTrackLocationProgressBar.Margin = new Padding(3, 4, 3, 4);
             audioTrackLocationProgressBar.Name = "audioTrackLocationProgressBar";
-            audioTrackLocationProgressBar.Size = new Size(1101, 23);
+            audioTrackLocationProgressBar.Size = new Size(1258, 31);
             audioTrackLocationProgressBar.TabIndex = 4;
             // 
             // timer1
@@ -97,18 +100,19 @@
             // currentTimeLabel
             // 
             currentTimeLabel.AutoSize = true;
-            currentTimeLabel.Location = new Point(29, 606);
+            currentTimeLabel.Location = new Point(33, 808);
             currentTimeLabel.Name = "currentTimeLabel";
-            currentTimeLabel.Size = new Size(38, 15);
+            currentTimeLabel.Size = new Size(50, 20);
             currentTimeLabel.TabIndex = 6;
             currentTimeLabel.Text = "label1";
             currentTimeLabel.Click += currentTimeLabel_Click;
             // 
             // flagButton
             // 
-            flagButton.Location = new Point(110, 478);
+            flagButton.Location = new Point(126, 637);
+            flagButton.Margin = new Padding(3, 4, 3, 4);
             flagButton.Name = "flagButton";
-            flagButton.Size = new Size(75, 23);
+            flagButton.Size = new Size(86, 31);
             flagButton.TabIndex = 7;
             flagButton.Text = "Add Flag";
             flagButton.UseVisualStyleBackColor = true;
@@ -117,10 +121,11 @@
             // lyricTextBox
             // 
             lyricTextBox.Enabled = false;
-            lyricTextBox.Location = new Point(711, 35);
+            lyricTextBox.Location = new Point(813, 47);
+            lyricTextBox.Margin = new Padding(3, 4, 3, 4);
             lyricTextBox.Name = "lyricTextBox";
             lyricTextBox.ReadOnly = true;
-            lyricTextBox.Size = new Size(444, 446);
+            lyricTextBox.Size = new Size(507, 593);
             lyricTextBox.TabIndex = 8;
             lyricTextBox.Text = "";
             lyricTextBox.TextChanged += lyricTextBox_TextChanged;
@@ -130,10 +135,12 @@
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { FlagNumber, FlagName, FlagTime, ProgressBarValue });
-            dataGridView1.Location = new Point(366, 37);
+            dataGridView1.Location = new Point(418, 49);
+            dataGridView1.Margin = new Padding(3, 4, 3, 4);
             dataGridView1.Name = "dataGridView1";
+            dataGridView1.RowHeadersWidth = 51;
             dataGridView1.RowTemplate.Height = 25;
-            dataGridView1.Size = new Size(341, 332);
+            dataGridView1.Size = new Size(390, 443);
             dataGridView1.TabIndex = 9;
             dataGridView1.CellContentClick += dataGridView1_CellContentClick;
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
@@ -145,34 +152,41 @@
             // 
             FlagNumber.AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
             FlagNumber.HeaderText = "FlagNumber";
+            FlagNumber.MinimumWidth = 6;
             FlagNumber.Name = "FlagNumber";
             FlagNumber.ReadOnly = true;
-            FlagNumber.Width = 98;
+            FlagNumber.Width = 120;
             // 
             // FlagName
             // 
             FlagName.HeaderText = "FlagName";
+            FlagName.MinimumWidth = 6;
             FlagName.Name = "FlagName";
+            FlagName.Width = 125;
             // 
             // FlagTime
             // 
             FlagTime.HeaderText = "FlagTime";
+            FlagTime.MinimumWidth = 6;
             FlagTime.Name = "FlagTime";
+            FlagTime.Width = 125;
             // 
             // ProgressBarValue
             // 
             ProgressBarValue.HeaderText = "ProgressBarValue";
+            ProgressBarValue.MinimumWidth = 6;
             ProgressBarValue.Name = "ProgressBarValue";
             ProgressBarValue.Visible = false;
+            ProgressBarValue.Width = 125;
             // 
             // deltaLabel
             // 
             deltaLabel.AutoSize = true;
             deltaLabel.BackColor = SystemColors.ButtonHighlight;
             deltaLabel.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
-            deltaLabel.Location = new Point(100, 5);
+            deltaLabel.Location = new Point(114, 7);
             deltaLabel.Name = "deltaLabel";
-            deltaLabel.Size = new Size(20, 25);
+            deltaLabel.Size = new Size(24, 32);
             deltaLabel.TabIndex = 11;
             deltaLabel.Text = "-";
             deltaLabel.TextAlign = ContentAlignment.MiddleRight;
@@ -182,9 +196,9 @@
             deltaTimeLabel.AutoSize = true;
             deltaTimeLabel.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
             deltaTimeLabel.ForeColor = Color.Red;
-            deltaTimeLabel.Location = new Point(169, 5);
+            deltaTimeLabel.Location = new Point(193, 7);
             deltaTimeLabel.Name = "deltaTimeLabel";
-            deltaTimeLabel.Size = new Size(20, 25);
+            deltaTimeLabel.Size = new Size(24, 32);
             deltaTimeLabel.TabIndex = 12;
             deltaTimeLabel.Text = "-";
             deltaTimeLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -193,10 +207,11 @@
             // 
             treeView1.AllowDrop = true;
             treeView1.LabelEdit = true;
-            treeView1.Location = new Point(3, 29);
+            treeView1.Location = new Point(3, 39);
+            treeView1.Margin = new Padding(3, 4, 3, 4);
             treeView1.Name = "treeView1";
             treeView1.ShowNodeToolTips = true;
-            treeView1.Size = new Size(350, 440);
+            treeView1.Size = new Size(399, 585);
             treeView1.TabIndex = 13;
             treeView1.BeforeLabelEdit += treeView1_BeforeLabelEdit;
             treeView1.AfterLabelEdit += treeView1_AfterLabelEdit;
@@ -218,44 +233,49 @@
             treePanel.Controls.Add(addSongsButton);
             treePanel.Controls.Add(newSetListButton);
             treePanel.Controls.Add(treeView1);
-            treePanel.Location = new Point(0, 6);
+            treePanel.Location = new Point(0, 8);
+            treePanel.Margin = new Padding(3, 4, 3, 4);
             treePanel.Name = "treePanel";
-            treePanel.Size = new Size(358, 470);
+            treePanel.Size = new Size(409, 627);
             treePanel.TabIndex = 14;
             // 
             // setListSongsListBox
             // 
             setListSongsListBox.FormattingEnabled = true;
-            setListSongsListBox.ItemHeight = 15;
-            setListSongsListBox.Location = new Point(154, 192);
+            setListSongsListBox.ItemHeight = 20;
+            setListSongsListBox.Location = new Point(176, 256);
+            setListSongsListBox.Margin = new Padding(3, 4, 3, 4);
             setListSongsListBox.Name = "setListSongsListBox";
-            setListSongsListBox.Size = new Size(190, 439);
+            setListSongsListBox.Size = new Size(217, 584);
             setListSongsListBox.TabIndex = 20;
             setListSongsListBox.MouseClick += setListSongsListBox_MouseClick;
             // 
             // setlistListBox
             // 
             setlistListBox.FormattingEnabled = true;
-            setlistListBox.ItemHeight = 15;
-            setlistListBox.Location = new Point(0, 192);
+            setlistListBox.ItemHeight = 20;
+            setlistListBox.Location = new Point(0, 256);
+            setlistListBox.Margin = new Padding(3, 4, 3, 4);
             setlistListBox.Name = "setlistListBox";
-            setlistListBox.Size = new Size(154, 439);
+            setlistListBox.Size = new Size(175, 584);
             setlistListBox.TabIndex = 19;
             setlistListBox.MouseClick += setlistListBox_MouseClick;
             setlistListBox.SelectedIndexChanged += setlistListBox_SelectedIndexChanged;
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(244, 3);
+            textBox1.Location = new Point(279, 4);
+            textBox1.Margin = new Padding(3, 4, 3, 4);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(100, 23);
+            textBox1.Size = new Size(114, 27);
             textBox1.TabIndex = 18;
             // 
             // setlistDeleteButton
             // 
-            setlistDeleteButton.Location = new Point(163, 3);
+            setlistDeleteButton.Location = new Point(186, 4);
+            setlistDeleteButton.Margin = new Padding(3, 4, 3, 4);
             setlistDeleteButton.Name = "setlistDeleteButton";
-            setlistDeleteButton.Size = new Size(75, 23);
+            setlistDeleteButton.Size = new Size(86, 31);
             setlistDeleteButton.TabIndex = 17;
             setlistDeleteButton.Text = "Delete Setlist";
             setlistDeleteButton.UseVisualStyleBackColor = true;
@@ -264,9 +284,10 @@
             // addSongsButton
             // 
             addSongsButton.Enabled = false;
-            addSongsButton.Location = new Point(82, 3);
+            addSongsButton.Location = new Point(94, 4);
+            addSongsButton.Margin = new Padding(3, 4, 3, 4);
             addSongsButton.Name = "addSongsButton";
-            addSongsButton.Size = new Size(75, 23);
+            addSongsButton.Size = new Size(86, 31);
             addSongsButton.TabIndex = 15;
             addSongsButton.Text = "Add songs";
             addSongsButton.UseVisualStyleBackColor = true;
@@ -274,9 +295,10 @@
             // 
             // newSetListButton
             // 
-            newSetListButton.Location = new Point(3, 3);
+            newSetListButton.Location = new Point(3, 4);
+            newSetListButton.Margin = new Padding(3, 4, 3, 4);
             newSetListButton.Name = "newSetListButton";
-            newSetListButton.Size = new Size(73, 23);
+            newSetListButton.Size = new Size(83, 31);
             newSetListButton.TabIndex = 14;
             newSetListButton.Text = "New Setlist";
             newSetListButton.UseVisualStyleBackColor = true;
@@ -290,9 +312,10 @@
             // controlPanel
             // 
             controlPanel.Controls.Add(audioTrackLocationProgressBar);
-            controlPanel.Location = new Point(0, 502);
+            controlPanel.Location = new Point(0, 669);
+            controlPanel.Margin = new Padding(3, 4, 3, 4);
             controlPanel.Name = "controlPanel";
-            controlPanel.Size = new Size(1176, 101);
+            controlPanel.Size = new Size(1344, 135);
             controlPanel.TabIndex = 15;
             // 
             // generateWaveLabel
@@ -300,9 +323,9 @@
             generateWaveLabel.AutoSize = true;
             generateWaveLabel.BackColor = SystemColors.MenuBar;
             generateWaveLabel.Font = new Font("Arial Narrow", 18F, FontStyle.Bold, GraphicsUnit.Point);
-            generateWaveLabel.Location = new Point(436, 470);
+            generateWaveLabel.Location = new Point(498, 627);
             generateWaveLabel.Name = "generateWaveLabel";
-            generateWaveLabel.Size = new Size(189, 29);
+            generateWaveLabel.Size = new Size(239, 35);
             generateWaveLabel.TabIndex = 19;
             generateWaveLabel.Text = "Generating Wave...";
             generateWaveLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -320,27 +343,29 @@
             panel1.Controls.Add(label1);
             panel1.Controls.Add(deltaLabel);
             panel1.Controls.Add(deltaTimeLabel);
-            panel1.Location = new Point(366, 375);
+            panel1.Location = new Point(418, 500);
+            panel1.Margin = new Padding(3, 4, 3, 4);
             panel1.Name = "panel1";
-            panel1.Size = new Size(259, 39);
+            panel1.Size = new Size(296, 51);
             panel1.TabIndex = 16;
             // 
             // label1
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
-            label1.Location = new Point(-2, 5);
+            label1.Location = new Point(-2, 7);
             label1.Name = "label1";
-            label1.Size = new Size(84, 25);
+            label1.Size = new Size(106, 32);
             label1.TabIndex = 13;
             label1.Text = "Up Next:";
             // 
             // editingCheckBox
             // 
             editingCheckBox.AutoSize = true;
-            editingCheckBox.Location = new Point(364, 12);
+            editingCheckBox.Location = new Point(416, 16);
+            editingCheckBox.Margin = new Padding(3, 4, 3, 4);
             editingCheckBox.Name = "editingCheckBox";
-            editingCheckBox.Size = new Size(101, 19);
+            editingCheckBox.Size = new Size(127, 24);
             editingCheckBox.TabIndex = 17;
             editingCheckBox.Text = "Enable Editing";
             editingCheckBox.UseVisualStyleBackColor = true;
@@ -351,19 +376,25 @@
             // fontButton
             // 
             fontButton.Enabled = false;
-            fontButton.Location = new Point(711, 9);
+            fontButton.Location = new Point(813, 12);
+            fontButton.Margin = new Padding(3, 4, 3, 4);
             fontButton.Name = "fontButton";
-            fontButton.Size = new Size(99, 23);
+            fontButton.Size = new Size(113, 31);
             fontButton.TabIndex = 18;
             fontButton.Text = "Change Font";
             fontButton.UseVisualStyleBackColor = true;
             fontButton.Click += button1_Click_2;
             // 
+            // flagTextCoolDown
+            // 
+            flagTextCoolDown.Interval = 2000;
+            flagTextCoolDown.Tick += flagTextCoolDown_Tick;
+            // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1174, 639);
+            ClientSize = new Size(1342, 852);
             Controls.Add(generateWaveLabel);
             Controls.Add(fontButton);
             Controls.Add(editingCheckBox);
@@ -376,6 +407,7 @@
             Controls.Add(playButton);
             Controls.Add(controlPanel);
             KeyPreview = true;
+            Margin = new Padding(3, 4, 3, 4);
             Name = "Form1";
             Text = "Form1";
             KeyDown += Form1_KeyDown;
@@ -422,5 +454,6 @@
         private ListBox setlistListBox;
         private ListBox setListSongsListBox;
         private Label generateWaveLabel;
+        private System.Windows.Forms.Timer flagTextCoolDown;
     }
 }

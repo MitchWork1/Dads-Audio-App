@@ -31,6 +31,7 @@ using System.IO;
 using Button = System.Windows.Forms.Button;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 using NAudio.CoreAudioApi;
+using TextBox = System.Windows.Forms.TextBox;
 
 namespace Dads_Audio_App
 {
@@ -69,6 +70,8 @@ namespace Dads_Audio_App
         private List<string[]> allFlagsInfo = new List<string[]>();
         private string currentSongName;
         private bool selectedSongLast;
+        private bool flagTextIsTyping = false;
+        private int selectedFlagTextIndex;
 
 
         //Must add selecting audio and moving that file into songs folder
@@ -145,9 +148,9 @@ namespace Dads_Audio_App
         {
             PictureBox line = new PictureBox();
             line.Image = lineImage;
-            line.Width = 1;
-            line.Height = 70;
-            line.Location = new Point(audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y - 5);
+            line.Width = 2;
+            line.Height = 110;
+            line.Location = new Point(audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y - 25);
             line.SizeMode = PictureBoxSizeMode.Normal;
             this.Controls.Add(line);
             line.BringToFront();
@@ -306,7 +309,8 @@ namespace Dads_Audio_App
         {
             try
             {
-                folderDirectory = $"{AppDomain.CurrentDomain.BaseDirectory}\\Mitchells Audio App";
+                folderDirectory = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Mitchells Audio App");
+                //folderDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Mitchells Audio App";
                 Directory.CreateDirectory(folderDirectory);
                 Directory.CreateDirectory(folderDirectory + "\\Set Lists");
                 Directory.CreateDirectory(folderDirectory + "\\Waves");
@@ -327,7 +331,7 @@ namespace Dads_Audio_App
 
         }
 
-        public async Task createAndSaveWave(string mediaAudioFileLocation, string songName)
+        public async Task createAndSaveWave(string location, string songName)
         {
             AveragePeakProvider averagePeakProvider = new AveragePeakProvider(4); // e.g. 4
 
@@ -341,7 +345,7 @@ namespace Dads_Audio_App
             myRendererSettings.BottomPeakPen = new Pen(Color.FromArgb(154, 154, 154)); //255, 213, 199
 
             WaveFormRenderer renderer = new WaveFormRenderer();
-            WaveStream audioFilePath = new MediaFoundationReader(mediaAudioFileLocation);
+            WaveStream audioFilePath = new MediaFoundationReader(location);
 
             System.Drawing.Image afterImage = renderer.Render(audioFilePath, averagePeakProvider, myRendererSettings);
 
@@ -530,6 +534,7 @@ namespace Dads_Audio_App
             flagCount = 0;
             lyricTextBox.Enabled = true;
             fontButton.Enabled = true;
+
             getWave(songName);
             string[] splitString = Path.GetFileName(songName).Split(".");
             songName = splitString[0];
@@ -579,8 +584,7 @@ namespace Dads_Audio_App
                 }
                 else
                 {
-
-                    await Task.Run(() => createAndSaveWave(mediaAudioFileLocation, songName));
+                    await Task.Run(() => createAndSaveWave(folderDirectory + "\\Songs\\" + songName, songName));
 
                     try
                     {
@@ -595,8 +599,7 @@ namespace Dads_Audio_App
             }
             else
             {
-
-                await Task.Run(() => createAndSaveWave(mediaAudioFileLocation, songName));
+                await Task.Run(() => createAndSaveWave(folderDirectory + "\\Songs\\" + songName, songName));
 
                 System.IO.FileInfo whileWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + name + "\\while_wave_" + name + ".png");
                 System.IO.FileInfo afterWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + name + "\\after_wave_" + name + ".png");
@@ -664,12 +667,30 @@ namespace Dads_Audio_App
             int positionX = position - flagPicWidth / 2;
             int positionY = audioTrackLocationProgressBar.Location.Y - 17;
             //Text
-            Label flagText = new Label();
+            TextBox flagText = new TextBox();
             flagText.Text = label;
             flagText.Font = new Font("Arial", 13, FontStyle.Regular);
-            flagText.AutoSize = true;
+            flagText.BorderStyle = BorderStyle.None;
+
+
+            // Create a Graphics object to measure the string size
+            using (Graphics g = flagText.CreateGraphics())
+            {
+                SizeF stringSize = g.MeasureString(flagText.Text, flagText.Font);
+                int offset = 0;
+
+                if(stringSize.Width < 16)
+                {
+                    stringSize.Width = 0;
+                    offset = 16;
+                }
+                // Set the TextBox size based on the measured text size
+                flagText.Width = (int)stringSize.Width + offset;  // Adjust the padding as needed
+                flagText.Height = (int)stringSize.Height;
+            }
             flagText.Location = new Point(positionX, positionY - 1 * flagText.Size.Height);
 
+            flagText.TextChanged += FlagText_TextChanged;
 
             PictureBox line = new PictureBox();
             line.Image = lineImageChangedColor;
@@ -713,11 +734,36 @@ namespace Dads_Audio_App
             line.BringToFront();
             moveBtn.BringToFront();
 
+
+        }
+
+        private void FlagText_TextChanged(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+
+            textBox.Size = new Size(150,textBox.Size.Height);
+
+            flagTextIsTyping = true;
+            flagTextCoolDown.Start();
+            selectedFlagTextIndex = flagControls.FindIndex(x => x[0].Text == textBox.Text);
         }
 
         private void MoveBtn_MouseUp(object sender, MouseEventArgs e)
         {
+            if (!dragging) { return; }
             dragging = false;
+            int xLocation = flagControls[draggingIndex][2].Location.X;
+
+            int PBLocX = audioTrackLocationProgressBar.Location.X;
+            int PBSizeX = audioTrackLocationProgressBar.Size.Width;
+            int PBmaxValue = audioTrackLocationProgressBar.Maximum;
+
+            int relativeX = xLocation - PBLocX; // Get the relative x position on the progress bar
+            float proportion = (float)relativeX / PBSizeX; // Proportion of the xLocation on the progress bar
+            int PBValue = (int)(proportion * PBmaxValue); // Calculate the PBValue
+
+            allFlagsInfo[draggingIndex][0] = PBValue.ToString();
+            saveFileV2(currentSongName);
         }
 
         private void MoveBtn_MouseMove(object sender, MouseEventArgs e)
@@ -729,6 +775,10 @@ namespace Dads_Audio_App
 
             if (Math.Abs(Xmoved) > 1) // Skip very small moves
             {
+                if (flagControls[draggingIndex][1].Location.X + Xmoved <= audioTrackLocationProgressBar.Location.X || flagControls[draggingIndex][1].Location.X + Xmoved >= audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width)
+                {
+                    Xmoved = 0;
+                }
                 controlPanel.SuspendLayout();
 
                 // Update locations of all the controls in the group (Label, PictureBox, Button)
@@ -743,16 +793,25 @@ namespace Dads_Audio_App
                 controlPanel.Refresh();
 
             }
+
         }
 
         private void MoveBtn_MouseDown(object sender, MouseEventArgs e)
         {
-            Button b;
-            b = (Button)sender;
-            draggingIndex = flagControls.FindIndex(x => x[2] == b);
+            if (editingCheckBox.Checked)
+            {
+                Button b;
+                b = (Button)sender;
+                draggingIndex = flagControls.FindIndex(x => x[2] == b);
 
-            dragging = true;
-            xoffset = e.X;
+                dragging = true;
+                xoffset = e.X;
+            }
+            else
+            {
+                dragging = false;
+            }
+
 
         }
 
@@ -773,12 +832,7 @@ namespace Dads_Audio_App
         private void createFlagAt(int PBValue, string flagLabel)
         {
             int PBLocX = audioTrackLocationProgressBar.Location.X;
-            int PBLocY = audioTrackLocationProgressBar.Location.Y;
-
             int PBSizeX = audioTrackLocationProgressBar.Size.Width;
-            int PBSizeY = audioTrackLocationProgressBar.Size.Height;
-
-            int PBminValue = audioTrackLocationProgressBar.Minimum;
             int PBmaxValue = audioTrackLocationProgressBar.Maximum;
 
             float proportion = (float)PBValue / PBmaxValue;
@@ -1082,11 +1136,11 @@ namespace Dads_Audio_App
             //        loadSetList();
             //    }
             //}
-            if(selectedSongLast != null)
+            if (selectedSongLast != null)
             {
                 string val = string.Empty;
                 string val2 = string.Empty;
-                if(!selectedSongLast)
+                if (!selectedSongLast)
                 {
                     val = selectedSetList;
                     val2 = folderDirectory + "\\Set Lists" + "\\" + "SetList_" + val + ".txt";
@@ -1106,7 +1160,7 @@ namespace Dads_Audio_App
                     System.IO.File.Delete(val2);
                 }
             }
-            
+
         }
 
         private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -1192,7 +1246,7 @@ namespace Dads_Audio_App
             string[] songList = System.IO.File.ReadAllLines(file);
             foreach (string song in songList)
             {
-                
+
                 setListSongsListBox.Items.Add(song);
             }
         }
@@ -1209,7 +1263,7 @@ namespace Dads_Audio_App
             {
                 string selectedItem = setListSongsListBox.Items[index].ToString();
                 selectedSong = selectedItem;
-                playSongV2(false,selectedItem);
+                playSongV2(false, selectedItem);
                 selectedSongLast = true;
             }
         }
@@ -1247,7 +1301,6 @@ namespace Dads_Audio_App
             string songInfoFileDirect = folderDirectory + "\\SongInfo" + "\\" + songNameNoExt + ".txt";
 
             FileInfo fileinfo = new FileInfo(songInfoFileDirect);
-
             getWave(songName);
 
             if (fileinfo.Exists)
@@ -1277,7 +1330,7 @@ namespace Dads_Audio_App
             {
                 createFlagAt(int.Parse(flag[0]), flag[1]);
             }
-            
+
         }
 
         private void saveFileV2(string songName)
@@ -1290,6 +1343,36 @@ namespace Dads_Audio_App
 
             string text = flagText + "$" + lyricTextBox.Rtf;
             System.IO.File.WriteAllText(folderDirectory + "\\SongInfo" + "\\" + songName + ".txt", text);
+        }
+
+        private void flagTextCoolDown_Tick(object sender, EventArgs e)
+        {        
+            
+            if (!flagTextIsTyping)
+            {
+                allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
+                saveFileV2(currentSongName);
+                flagTextCoolDown.Stop();
+                TextBox textBox = (TextBox)flagControls[selectedFlagTextIndex][0];
+
+                using (Graphics g = textBox.CreateGraphics())
+                {
+                    // Measure the size of the text
+                    SizeF stringSize = g.MeasureString(textBox.Text, textBox.Font);
+                    int offset = 0;
+                    if (stringSize.Width < 16)
+                    {
+                        stringSize.Width = 0;
+                        offset = 16;
+                    }
+
+                    textBox.Width = (int)stringSize.Width + offset;
+                }
+
+                textBox.SelectionStart = 0; // Move the caret to the end of the text
+                textBox.ScrollToCaret();
+            }
+            flagTextIsTyping = false;
         }
     }
 }
