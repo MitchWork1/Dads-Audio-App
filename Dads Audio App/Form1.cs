@@ -66,6 +66,7 @@ namespace Dads_Audio_App
         int xoffset;
         private PictureBox currentBehindWave;
         private string selectedSetList;
+        private int selectedSetListIndex;
         private string selectedSong;
         private List<string[]> allFlagsInfo = new List<string[]>();
         private string currentSongName;
@@ -679,7 +680,7 @@ namespace Dads_Audio_App
                 SizeF stringSize = g.MeasureString(flagText.Text, flagText.Font);
                 int offset = 0;
 
-                if(stringSize.Width < 16)
+                if (stringSize.Width < 16)
                 {
                     stringSize.Width = 0;
                     offset = 16;
@@ -710,12 +711,6 @@ namespace Dads_Audio_App
             moveBtn.BackgroundImageLayout = ImageLayout.Zoom;
             moveBtn.BackgroundImage = image;
             moveBtn.Size = new Size(flagPicWidth, flagPicHeight);
-            moveBtn.GotFocus += (s, e) => moveBtn.Parent.Focus();
-
-            moveBtn.MouseDown += MoveBtn_MouseDown;
-            moveBtn.MouseMove += MoveBtn_MouseMove;
-            moveBtn.MouseUp += MoveBtn_MouseUp;
-            moveBtn.Capture = true;
 
             Control[] controls = new Control[3];
 
@@ -730,10 +725,14 @@ namespace Dads_Audio_App
             controlPanel.Controls.Add(moveBtn);
 
 
+            moveBtn.MouseDown += MoveBtn_MouseDown;
+            moveBtn.MouseMove += MoveBtn_MouseMove;
+            moveBtn.MouseUp += MoveBtn_MouseUp;
+
+
             flagText.BringToFront();
             line.BringToFront();
             moveBtn.BringToFront();
-
 
         }
 
@@ -800,10 +799,11 @@ namespace Dads_Audio_App
         {
             if (editingCheckBox.Checked)
             {
+
                 Button b;
                 b = (Button)sender;
-                draggingIndex = flagControls.FindIndex(x => x[2] == b);
 
+                draggingIndex = flagControls.FindIndex(x => x[2] == b);
                 dragging = true;
                 xoffset = e.X;
             }
@@ -1236,6 +1236,7 @@ namespace Dads_Audio_App
                 string selectedItem = setlistListBox.Items[index].ToString();
                 loadSongs(selectedItem);
                 selectedSetList = selectedItem;
+                selectedSetListIndex = index;
                 selectedSongLast = false;
             }
         }
@@ -1273,6 +1274,7 @@ namespace Dads_Audio_App
 
             allFlagsInfo.Clear();
             controlPanel.Controls.Clear();
+            flagControls.Clear();
 
             lyricTextBox.Enabled = true;
             fontButton.Enabled = true;
