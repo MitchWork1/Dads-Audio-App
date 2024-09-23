@@ -35,16 +35,19 @@
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(12, 12);
+            textBox1.Location = new Point(14, 16);
+            textBox1.Margin = new Padding(3, 4, 3, 4);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(156, 23);
+            textBox1.Size = new Size(178, 27);
             textBox1.TabIndex = 0;
+            textBox1.PreviewKeyDown += textBox1_PreviewKeyDown;
             // 
             // button1
             // 
-            button1.Location = new Point(12, 41);
+            button1.Location = new Point(14, 55);
+            button1.Margin = new Padding(3, 4, 3, 4);
             button1.Name = "button1";
-            button1.Size = new Size(75, 23);
+            button1.Size = new Size(86, 31);
             button1.TabIndex = 1;
             button1.Text = "Create";
             button1.UseVisualStyleBackColor = true;
@@ -52,9 +55,10 @@
             // 
             // button2
             // 
-            button2.Location = new Point(93, 41);
+            button2.Location = new Point(106, 55);
+            button2.Margin = new Padding(3, 4, 3, 4);
             button2.Name = "button2";
-            button2.Size = new Size(75, 23);
+            button2.Size = new Size(86, 31);
             button2.TabIndex = 2;
             button2.Text = "Cancel";
             button2.UseVisualStyleBackColor = true;
@@ -62,13 +66,14 @@
             // 
             // UserInputForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(182, 80);
+            ClientSize = new Size(208, 107);
             ControlBox = false;
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(textBox1);
+            Margin = new Padding(3, 4, 3, 4);
             MinimizeBox = false;
             Name = "UserInputForm";
             ShowIcon = false;

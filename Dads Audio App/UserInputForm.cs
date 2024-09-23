@@ -22,14 +22,40 @@ namespace Dads_Audio_App
 
         private void button1_Click(object sender, EventArgs e)
         {
-            GlobalVariables.stringResult = textBox1.Text;
-            this.Close();
+            if (this.Text == "Add SetList")
+            {
+                if (!GlobalVariables.setLists.Contains(textBox1.Text.ToLower()))
+                {
+                    GlobalVariables.setLists.Add(textBox1.Text.ToLower());
+                    GlobalVariables.stringResult = textBox1.Text;
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("There is already a setlist with that name!");
+                }
+            }
+            else
+            {
+                GlobalVariables.stringResult = textBox1.Text;
+                this.Close();
+            }
+
+
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             GlobalVariables.stringResult = null;
             this.Close();
+        }
+
+        private void textBox1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if(e.KeyCode == Keys.Enter)
+            {
+                button1.PerformClick();
+            }
         }
     }
 }
