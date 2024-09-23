@@ -770,7 +770,7 @@ namespace Dads_Audio_App
 
         }
 
-        private void flagText_Enter(object? sender, EventArgs e)
+        private void flagText_Enter(object sender, EventArgs e)
         {
             if(!editingCheckBox.Checked)
             {
