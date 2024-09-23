@@ -340,6 +340,7 @@
             controlPanel.Name = "controlPanel";
             controlPanel.Size = new Size(1344, 135);
             controlPanel.TabIndex = 15;
+            controlPanel.MouseDoubleClick += controlPanel_DoubleClick;
             // 
             // generateWaveLabel
             // 
@@ -461,18 +462,18 @@
             flagsContextStrip.ImageScalingSize = new Size(20, 20);
             flagsContextStrip.Items.AddRange(new ToolStripItem[] { addToolStripMenuItem2, deleteToolStripMenuItem2 });
             flagsContextStrip.Name = "flagsContextStrip";
-            flagsContextStrip.Size = new Size(211, 80);
+            flagsContextStrip.Size = new Size(123, 52);
             // 
             // addToolStripMenuItem2
             // 
             addToolStripMenuItem2.Name = "addToolStripMenuItem2";
-            addToolStripMenuItem2.Size = new Size(210, 24);
+            addToolStripMenuItem2.Size = new Size(122, 24);
             addToolStripMenuItem2.Text = "Add";
             // 
             // deleteToolStripMenuItem2
             // 
             deleteToolStripMenuItem2.Name = "deleteToolStripMenuItem2";
-            deleteToolStripMenuItem2.Size = new Size(210, 24);
+            deleteToolStripMenuItem2.Size = new Size(122, 24);
             deleteToolStripMenuItem2.Text = "Delete";
             // 
             // Form1

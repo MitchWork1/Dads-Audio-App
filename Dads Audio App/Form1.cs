@@ -471,8 +471,8 @@ namespace Dads_Audio_App
             //createFlagAt(audioTrackLocationProgressBar.Value, $"flag {flagCount}");
             //saveFile();
             flagCount++;
-            allFlagsInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), $"flag {flagCount}" });
-            createFlagAt(audioTrackLocationProgressBar.Value, $"flag {flagCount}");
+            allFlagsInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), $"Flag {flagCount}" });
+            createFlagAt(audioTrackLocationProgressBar.Value, $"Flag {flagCount}");
             saveFileV2(currentSongName);
         }
 
@@ -628,10 +628,38 @@ namespace Dads_Audio_App
             audioTrackLocationProgressBar.Visible = false;
             pictureBox1.Location = audioTrackLocationProgressBar.Location;
 
+            pictureBox1.DoubleClick += wavePic_DoubleClick;
+
             controlPanel.Controls.Add(pictureBox1);
             pictureBox1.SendToBack();
             currentBehindWave = pictureBox1;
             pictureBox1.Size = new Size(0, pictureBox1.Size.Height);
+        }
+
+        private void wavePic_DoubleClick(object? sender, EventArgs e)
+        {
+            if (editingCheckBox.Checked)
+            {
+
+                Control control = (Control)sender;
+                Point mousePoint = this.PointToClient(MousePosition);
+
+                if (mousePoint.X > audioTrackLocationProgressBar.Location.X && mousePoint.X < audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width)
+                {
+                    int PBLocX = audioTrackLocationProgressBar.Location.X;
+                    int PBSizeX = audioTrackLocationProgressBar.Size.Width;
+                    int PBmaxValue = audioTrackLocationProgressBar.Maximum;
+
+                    int relativeX = mousePoint.X - PBLocX;
+                    float proportion = (float)relativeX / PBSizeX; // Proportion of the xLocation on the progress bar
+                    int PBValue = (int)(proportion * PBmaxValue); // Calculate the PBValue
+
+                    flagCount++;
+                    allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
+                    createFlagAt(PBValue, $"Flag {flagCount}");
+                    saveFileV2(currentSongName);
+                }
+            }
         }
 
         private void loadWave(string fullName)
@@ -642,6 +670,8 @@ namespace Dads_Audio_App
             pictureBox1.Image = wave;
             audioTrackLocationProgressBar.Visible = false;
             pictureBox1.Location = audioTrackLocationProgressBar.Location;
+
+            pictureBox1.DoubleClick += wavePic_DoubleClick;
 
             controlPanel.Controls.Add(pictureBox1);
             pictureBox1.SendToBack();
@@ -695,6 +725,7 @@ namespace Dads_Audio_App
             flagText.Location = new Point(positionX, positionY - 1 * flagText.Size.Height);
 
             flagText.TextChanged += FlagText_TextChanged;
+            flagText.Enter += flagText_Enter;
 
             PictureBox line = new PictureBox();
             line.Image = lineImageChangedColor;
@@ -737,6 +768,14 @@ namespace Dads_Audio_App
             line.BringToFront();
             moveBtn.BringToFront();
 
+        }
+
+        private void flagText_Enter(object? sender, EventArgs e)
+        {
+            if(!editingCheckBox.Checked)
+            {
+                this.ActiveControl = null;
+            }
         }
 
         private void FlagText_TextChanged(object sender, EventArgs e)
@@ -807,7 +846,7 @@ namespace Dads_Audio_App
         {
             if (editingCheckBox.Checked)
             {
-                if(e.Button == MouseButtons.Left)
+                if (e.Button == MouseButtons.Left)
                 {
                     Button b;
                     b = (Button)sender;
@@ -1316,7 +1355,7 @@ namespace Dads_Audio_App
         private void flagTextCoolDown_Tick(object sender, EventArgs e)
         {
 
-            if (!flagTextIsTyping)
+            if (!flagTextIsTyping || this.ActiveControl != flagControls[selectedFlagTextIndex][0])
             {
                 allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
                 saveFileV2(currentSongName);
@@ -1559,6 +1598,32 @@ namespace Dads_Audio_App
                 setListContextMenu.Items[1].Visible = false;
                 Point mousePos = Control.MousePosition;
                 setListContextMenu.Show(mousePos);
+            }
+        }
+
+        private void controlPanel_DoubleClick(object sender, MouseEventArgs e)
+        {
+            if (editingCheckBox.Checked)
+            {
+
+                Control control = (Control)sender;
+                Point mousePoint = this.PointToClient(MousePosition);
+
+                if (mousePoint.X > audioTrackLocationProgressBar.Location.X && mousePoint.X < audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width)
+                {
+                    int PBLocX = audioTrackLocationProgressBar.Location.X;
+                    int PBSizeX = audioTrackLocationProgressBar.Size.Width;
+                    int PBmaxValue = audioTrackLocationProgressBar.Maximum;
+
+                    int relativeX = mousePoint.X - PBLocX;
+                    float proportion = (float)relativeX / PBSizeX; // Proportion of the xLocation on the progress bar
+                    int PBValue = (int)(proportion * PBmaxValue); // Calculate the PBValue
+
+                    flagCount++;
+                    allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
+                    createFlagAt(PBValue, $"Flag {flagCount}");
+                    saveFileV2(currentSongName);
+                }
             }
         }
     }
