@@ -76,6 +76,13 @@ namespace Dads_Audio_App
         private int yoffset;
         private int _dragIndex;
         private bool _isDragging;
+        private int _dragIndexSetList;
+        private bool _isDraggingSetList;
+        private List<string> currentSongList = new();
+        private bool inSongSeach;
+        private string songSearchString = string.Empty;
+        private string setListSearchString = string.Empty;
+        private List<string> setListList = new();
 
 
         //Must add selecting audio and moving that file into songs folder
@@ -93,7 +100,6 @@ namespace Dads_Audio_App
             lineImage = new Bitmap(launch + "lineImage.png");
             image.MakeTransparent(Color.White);
             lineImage.MakeTransparent(Color.White);
-            loadSetList();
             loadSetList2();
             createLine();
             editMode(false);
@@ -103,8 +109,6 @@ namespace Dads_Audio_App
 
         private void editMode(bool toggle)
         {
-            dataGridView1.Visible = toggle;
-            dataGridView1.Enabled = toggle;
             flagButton.Enabled = toggle;
             flagButton.Visible = toggle;
             newSetListButton.Enabled = toggle;
@@ -215,7 +219,6 @@ namespace Dads_Audio_App
         {
             nextFlagName = null;
             lyricTextBox.Rtf = string.Empty;
-            dataGridView1.Rows.Clear();
             CSFD.Clear();
             if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Playing)
             {
@@ -233,29 +236,7 @@ namespace Dads_Audio_App
                 mediaAudioFileLocation = selectMusicFileDialog.FileName;
                 try
                 {
-                    playSongV2(fromPlay, mediaAudioFileLocation); //V1
-                    //mediaPlayer = new MediaFoundationReader(mediaAudioFileLocation);
-                    //outputDevice.Init(mediaPlayer);
-                    //audioTrackLocationProgressBar.Maximum = (int)mediaPlayer.TotalTime.TotalMilliseconds;
-                    //fileName = Path.GetFileName(mediaAudioFileLocation);
-
-
-
-
-
-                    ////openInfoFile(fileName);
-                    //openInfoFile(fileName);
-
-
-                    //timer1.Start();
-
-                    //songLength = mediaPlayer.TotalTime;
-                    //if (fromPlay)
-                    //{
-                    //    outputDevice.Play();
-                    //    isPlayingAudio = true;
-                    //}
-                    //songLengthFormatted = mediaPlayer.TotalTime.ToString(@"mm\:ss");
+                    playSongV2(fromPlay, mediaAudioFileLocation);
                 }
                 catch
                 {
@@ -266,48 +247,6 @@ namespace Dads_Audio_App
             }
         }
 
-        private void playSong(bool fromPlay, string songLocation)
-        {
-            mediaAudioFileLocation = songLocation;
-            nextFlagName = null;
-            lyricTextBox.Rtf = string.Empty;
-            dataGridView1.Rows.Clear();
-            controlPanel.Controls.Clear();
-            CSFD.Clear();
-            if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Playing)
-            {
-                outputDevice.Stop();
-                outputDevice.Dispose();
-                isPlayingAudio = false;
-            }
-
-            if (outputDevice == null)
-            {
-                outputDevice = new WaveOutEvent();
-            }
-            mediaPlayer = new MediaFoundationReader(songLocation);
-            outputDevice.Init(mediaPlayer);
-            audioTrackLocationProgressBar.Maximum = (int)mediaPlayer.TotalTime.TotalMilliseconds;
-            fileName = Path.GetFileName(songLocation);
-
-
-
-
-
-            //openInfoFile(fileName);
-            openInfoFile(fileName);
-
-
-            timer1.Start();
-
-            songLength = mediaPlayer.TotalTime;
-            if (fromPlay)
-            {
-                outputDevice.Play();
-                isPlayingAudio = true;
-            }
-            songLengthFormatted = mediaPlayer.TotalTime.ToString(@"mm\:ss");
-        }
 
         private void firstTimeStartUp() //creates folder to store song info
         {
@@ -321,6 +260,12 @@ namespace Dads_Audio_App
                 Directory.CreateDirectory(folderDirectory + "\\Songs");
                 Directory.CreateDirectory(folderDirectory + "\\SongInfo");
                 Directory.CreateDirectory(folderDirectory + "\\ProgramInfo");
+                FileInfo fileInfo = new System.IO.FileInfo(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
+                if (!fileInfo.Exists)
+                {
+                    System.IO.File.Create(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
+                }
+
             }
             catch
             {
@@ -463,112 +408,15 @@ namespace Dads_Audio_App
 
         private void flagButton_Click(object sender, EventArgs e)
         {
-            //flagCount++;
-            //string flagCreationTime = mediaPlayer.CurrentTime.ToString(@"mm\:ss");
-            //string value = audioTrackLocationProgressBar.Value.ToString(@"mm\:ss");
-
-            //dataGridView1.Rows.Add(flagCount, $"flag {flagCount}", flagCreationTime, audioTrackLocationProgressBar.Value.ToString());
-            //createFlagAt(audioTrackLocationProgressBar.Value, $"flag {flagCount}");
-            //saveFile();
             flagCount++;
             allFlagsInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), $"Flag {flagCount}" });
             createFlagAt(audioTrackLocationProgressBar.Value, $"Flag {flagCount}");
             saveFileV2(currentSongName);
         }
 
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-
-        }
-
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void saveFile()
-        {
-            string[] splitString = Path.GetFileName(mediaAudioFileLocation).Split(".");
-            fileName = splitString[0] + ".txt";
-            string text = getFlagsFromTable();
-            text = text + "$" + lyricTextBox.Rtf;
-            System.IO.File.WriteAllText(folderDirectory + "\\SongInfo" + "\\" + fileName, text);
-        }
-
-        private string getFlagsFromTable()
-        {
-            List<string> flags = new List<string>();
-            for (int i = 0; i < dataGridView1.RowCount; i++)
-            {
-                string part1 = "";
-                string part2 = "";
-                string part3 = "";
-                string part4 = "";
-
-                try
-                {
-                    part1 = dataGridView1.Rows[i].Cells[0].Value.ToString();
-                    part2 = dataGridView1.Rows[i].Cells[1].Value.ToString();
-                    part3 = dataGridView1.Rows[i].Cells[2].Value.ToString();
-                    part4 = dataGridView1.Rows[i].Cells[3].Value.ToString();
-
-                    string line = "^" + part1 + ";" + part2 + ";" + part3 + ";" + part4;
-
-                    flags.Add(line);
-                }
-                catch
-                {
-
-                }
-
-            };
-            return String.Join("", flags);
-        }
-
-
-
-        private void openInfoFile(string songName) //checks for txt file with same name as song selected to load flag info
-        {
-            flagCount = 0;
-            lyricTextBox.Enabled = true;
-            fontButton.Enabled = true;
-
-            getWave(songName);
-            string[] splitString = Path.GetFileName(songName).Split(".");
-            songName = splitString[0];
-            string filePath = folderDirectory + "\\SongInfo" + "\\" + songName + ".txt";
-
-            FileInfo fileinfo = new FileInfo(filePath);
-
-            if (fileinfo.Exists)
-            {
-                //if (fileinfo.Length > 1)
-                {
-                    string info = System.IO.File.ReadAllText(filePath);
-                    string[] infoSplit = info.Split('$');
-                    string allFlags = infoSplit[0];
-                    string allLyrics = infoSplit[1];
-                    string[] flagBreakDown = allFlags.Split('^');
-                    for (int i = 1; i < flagBreakDown.Count(); i++)
-                    {
-                        string[] split = flagBreakDown[i].Split(';');
-                        CSFD.Add(split[0], new string[] { split[1], split[2], split[3] });
-                    }
-                    lyricTextBox.Rtf = allLyrics;
-                    populateTableWithFlags();
-                }
-                //else
-                {
-                    saveFile();
-                    flagCount = CSFD.Count();
-                }
-            }
 
         }
 
@@ -678,22 +526,6 @@ namespace Dads_Audio_App
             generateWaveLabel.Visible = false;
         }
 
-        private void populateTableWithFlags()
-        {
-            for (int i = 1; i < CSFD.Count + 1; i++)
-            {
-                dataGridView1.Rows.Add(i, CSFD[i.ToString()][0], CSFD[i.ToString()][1], CSFD[i.ToString()][2]);
-            }
-            flagCount = CSFD.Count();
-            createAllFlags();
-        }
-
-        private void button1_Click_1(object sender, EventArgs e)
-        {
-            //saveFile();
-            saveFile();
-        }
-
         private void createFlags(int position, string label)
         {
             int flagPicWidth = 16;
@@ -772,7 +604,7 @@ namespace Dads_Audio_App
 
         private void flagText_Enter(object sender, EventArgs e)
         {
-            if(!editingCheckBox.Checked)
+            if (!editingCheckBox.Checked)
             {
                 this.ActiveControl = null;
             }
@@ -872,19 +704,6 @@ namespace Dads_Audio_App
 
         }
 
-        private void createAllFlags() //Determines were the progress bar is and therefore where to place flags 
-        {
-
-            for (int i = 0; i < dataGridView1.RowCount; i++)
-            {
-                string val = dataGridView1.Rows[i].Cells[3].Value.ToString();
-                int PBcurrentValue = Int32.Parse(val);
-                string flagLabel = dataGridView1.Rows[i].Cells[1].Value.ToString();
-                createFlagAt(PBcurrentValue, flagLabel);
-            }
-
-        }
-
 
         private void createFlagAt(int PBValue, string flagLabel)
         {
@@ -899,41 +718,11 @@ namespace Dads_Audio_App
             createFlags(xLocation, flagLabel);
         }
 
-        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
-
-        private void dataGridView1_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
-        { //need to add if user deleted or code deleted check
-            if (userDeletedRow)
-            {
-                userDeletedRow = false;
-                for (int i = 0; i < e.RowCount; i++)
-                {
-                    if ((int)dataGridView1.Rows[i].Cells[0].Value > e.RowIndex + 1)
-                    {
-                        dataGridView1.Rows[i].Cells[0].Value = ((int)dataGridView1.Rows[i].Cells[0].Value - 1).ToString();
-                    }
-                }
-                saveFile();
-                CSFD.Clear();
-                dataGridView1.Rows.Clear();
-                controlPanel.Controls.Clear();
-                openInfoFile(fileName);
-            }
-        }
 
         private void lyricTextBox_TextChanged(object sender, EventArgs e)
         {
             stillTyping = true;
             timer2.Start();
-        }
-
-
-        private void treeView1_DoubleClick(object sender, EventArgs e)
-        {
-
         }
 
         private void newSetListButton_Click(object sender, EventArgs e)
@@ -951,10 +740,11 @@ namespace Dads_Audio_App
             if (result != null && result != "")
             {
                 //New Implement
-                setlistListBox.Items.Add(result);
-                setlistListBox.SelectedItem = result;
+                setListListBox.Items.Add(result);
+                setListListBox.SelectedItem = result;
                 songsListBox.Items.Clear();
                 saveSetList2(result);
+                setListList.Add(result);
             }
         }
 
@@ -967,27 +757,19 @@ namespace Dads_Audio_App
             }
             if (setListName != null || setListName != "")
             {
+                List<string> setList = new();
                 System.IO.File.WriteAllLines(folderDirectory + "\\Set Lists" + "\\" + "SetList_" + setListName + ".txt", songs);
-            }
-        }
-
-        private void saveSetList(string setListName)
-        {
-            List<string> songs = new List<string>();
-            for (int i = 0; i < treeView1.SelectedNode.Nodes.Count; i++)
-            {
-                songs.Add(treeView1.SelectedNode.Nodes[i].Text);
-            }
-
-            if (setListName != null || setListName != "")
-            {
-                System.IO.File.WriteAllLines(folderDirectory + "\\Set Lists" + "\\" + "SetList_" + setListName + ".txt", songs);
+                foreach (var item in setListListBox.Items)
+                {
+                    setList.Add(item.ToString());
+                }
+                System.IO.File.WriteAllLines(folderDirectory + "\\ProgramInfo\\setListOrder.txt", setList.ToArray());
             }
         }
 
         private void addSongsButton_Click(object sender, EventArgs e)
         {
-            if (setlistListBox.SelectedItem != null)
+            if (setListListBox.SelectedItem != null)
             {
                 addSong();
             }
@@ -997,61 +779,13 @@ namespace Dads_Audio_App
             }
         }
 
-        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            previousSelectedNodeName = e.Node.Text;
-            if (treeView1.SelectedNode != null)
-            {
-                treeView1.SelectedNode.ExpandAll();
-                if (treeView1.SelectedNode.Level > 0)
-                {
-                    playSongV2(false, folderDirectory + "\\Songs" + "\\" + treeView1.SelectedNode.Text); //V1
-                    addSongsButton.Enabled = false;
-                }
-                else
-                {
-                    addSongsButton.Enabled = true;
-                }
-
-            }
-        }
-
-        private void treeView1_Leave(object sender, EventArgs e)
-        {
-
-        }
-
-        private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-
-        }
-
-        private void loadSetList()
-        {
-            string[] files = Directory.GetFiles(folderDirectory + "\\Set Lists");
-            foreach (var file in files)
-            {
-                string fileName = Path.GetFileName(file);
-                string name = fileName.Split("SetList_")[1].Split('.')[0];
-                TreeNode newNode = new TreeNode(name);
-                string[] songList = System.IO.File.ReadAllLines(file);
-                foreach (string song in songList)
-                {
-                    newNode.Nodes.Add(song);
-                }
-                treeView1.Nodes.Add(newNode);
-            }
-        }
-
         private void loadSetList2() //For ListBox
         {
-            string[] files = Directory.GetFiles(folderDirectory + "\\Set Lists");
-            foreach (var file in files)
+            string[] setListOrder = System.IO.File.ReadAllLines(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
+            foreach (var setList in setListOrder)
             {
-                string fileName = Path.GetFileName(file);
-                string name = fileName.Split("SetList_")[1].Split('.')[0];
-                setlistListBox.Items.Add(name);
-                GlobalVariables.setLists.Add(name.ToLower());
+                setListListBox.Items.Add(setList);
+                GlobalVariables.setLists.Add(setList.ToLower());
             }
         }
 
@@ -1092,48 +826,6 @@ namespace Dads_Audio_App
             coolDwon.Stop();
         }
 
-        private void treeView1_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            DoDragDrop(e.Item, DragDropEffects.Move);
-        }
-
-        private void treeView1_DragEnter_1(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(typeof(TreeNode)))
-            {
-                e.Effect = DragDropEffects.Move;
-            }
-            else
-            {
-                e.Effect = DragDropEffects.None;
-            }
-        }
-
-        private void treeView1_DragDrop(object sender, DragEventArgs e)
-        {
-            // Get the dragged node
-            TreeNode draggedNode = (TreeNode)e.Data.GetData(typeof(TreeNode));
-
-            // Get the position of the drop
-            Point pt = treeView1.PointToClient(new Point(e.X, e.Y));
-            TreeNode targetNode = treeView1.GetNodeAt(pt);
-
-            // Check if the target node is valid and is within the same parent
-            if (targetNode != null && draggedNode.Parent == targetNode.Parent)
-            {
-                TreeNode parentNode = draggedNode.Parent;
-
-                // Remove the dragged node from the current position
-                draggedNode.Remove();
-
-                // Insert the dragged node at the target position
-                int targetIndex = targetNode.Index;
-                parentNode.Nodes.Insert(targetIndex, draggedNode);
-
-                saveSetList(parentNode.Text);
-
-            }
-        }
 
         private void editingCheckBox_CheckedChanged(object sender, EventArgs e)
         {
@@ -1147,32 +839,14 @@ namespace Dads_Audio_App
             }
         }
 
-        private void treeView1_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
-        {
-            if (e.Node.Level > 0)
-            {
-                e.CancelEdit = true;
-            }
-
-        }
-
-        private void treeView1_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
-        {
-            if (e.Node.Text != e.Label)
-            {
-
-                saveSetList(e.Label);
-                System.IO.File.Delete(folderDirectory + "\\Set Lists" + "\\" + "SetList_" + e.Node.Text + ".txt");
-            }
-        }
 
         private void setlistDeleteButton_Click(object sender, EventArgs e)
         {
-            if (setlistListBox.SelectedItem != null && songsListBox.SelectedItem == null)
+            if (setListListBox.SelectedItem != null && songsListBox.SelectedItem == null)
             {
                 deleteSetList();
             }
-            else if (setlistListBox.SelectedItem != null && songsListBox.SelectedItem != null)
+            else if (setListListBox.SelectedItem != null && songsListBox.SelectedItem != null)
             {
 
                 deleteSongs();
@@ -1182,36 +856,6 @@ namespace Dads_Audio_App
                 MessageBox.Show("Select Setlist to delete");
             }
 
-        }
-
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex == 2 || e.ColumnIndex == 1)
-            {
-                string time = dataGridView1.Rows[e.RowIndex].Cells[2].Value.ToString();
-                string[] timeParts = time.Split(':');
-                int minutes = int.Parse(timeParts[0]);
-                int seconds = int.Parse(timeParts[1]);
-
-                int totalMilliSeconds = (minutes * 60 * 1000) + (seconds * 1000);
-
-                dataGridView1.Rows[e.RowIndex].Cells[3].Value = totalMilliSeconds;
-            }
-            //saveFile();
-            saveFile();
-            CSFD.Clear();
-            dataGridView1.Rows.Clear();
-            controlPanel.Controls.Clear();
-            //openInfoFile(fileName);
-            openInfoFile(fileName);
-        }
-
-        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
-            {
-                userDeletedRow = true;
-            }
         }
 
         private void button1_Click_2(object sender, EventArgs e)
@@ -1228,7 +872,7 @@ namespace Dads_Audio_App
                 {
                     lyricTextBox.Font = fontDialog1.Font;
                 }
-                saveFile();
+                saveFileV2(currentSongName);
             }
 
         }
@@ -1239,11 +883,6 @@ namespace Dads_Audio_App
         }
 
         private void editingCheckBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
-        {
-
-        }
-
-        private void treeView1_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
 
         }
@@ -1259,7 +898,16 @@ namespace Dads_Audio_App
             string[] songList = System.IO.File.ReadAllLines(file);
             foreach (string song in songList)
             {
-
+                songsListBox.Items.Add(song);
+                currentSongList.Add(song);
+            }
+        }
+        private void loadSongsForSearch(string setListName)
+        {
+            string file = folderDirectory + "\\Set Lists" + "\\" + "SetList_" + setListName + ".txt";
+            string[] songList = System.IO.File.ReadAllLines(file);
+            foreach (string song in songList)
+            {
                 songsListBox.Items.Add(song);
             }
         }
@@ -1389,7 +1037,16 @@ namespace Dads_Audio_App
 
         private void setlistListBox_MouseDown(object sender, MouseEventArgs e)
         {
-
+            int index = setListListBox.IndexFromPoint(e.Location);
+            _dragIndexSetList = index;
+            if (index != ListBox.NoMatches && editingCheckBox.Checked)
+            {
+                _isDraggingSetList = true;
+            }
+            else
+            {
+                _isDraggingSetList = false;
+            }
 
         }
 
@@ -1405,7 +1062,7 @@ namespace Dads_Audio_App
 
             int index = songsListBox.IndexFromPoint(e.Location);
             _dragIndex = index;
-            if (index != ListBox.NoMatches)
+            if (index != ListBox.NoMatches && editingCheckBox.Checked)
             {
                 _isDragging = true;
             }
@@ -1433,31 +1090,90 @@ namespace Dads_Audio_App
 
         private void setlistListBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
+            if (e.KeyCode == Keys.Delete /*|| e.KeyCode == Keys.Back*/)
             {
-                if (setlistListBox.SelectedItem != null)
+                if (setListListBox.SelectedItem != null)
                 {
                     deleteSetList();
                 }
-
+            }
+            else
+            {
+                if (e.KeyCode == Keys.Back && setListSearchString.Length > 0)
+                {
+                    setListSearchString = setListSearchString.Substring(0, setListSearchString.Length - 1);
+                }
+                else if (e.KeyCode.ToString().Length == 1)
+                {
+                    setListSearchString += e.KeyCode.ToString().ToLower();
+                }
+                if (setListSearchString.Length > 0)
+                {
+                    setListListBox.Items.Clear();
+                    foreach (var setList in setListList)
+                    {
+                        if (setList.ToLower().StartsWith(setListSearchString.ToString().ToLower()))
+                        {
+                            setListListBox.Items.Add(setList);
+                        }
+                    }
+                    setListSearchLabel.Text = setListSearchString;
+                }
+                else
+                {
+                    setListListBox.Items.Clear();
+                    loadSetList2();
+                    setListSearchLabel.Text = "";
+                }
             }
         }
 
         private void songsListBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
+            if (e.KeyCode == Keys.Delete/* || e.KeyCode == Keys.Back*/)
             {
                 if (songsListBox.SelectedItem != null)
                 {
                     deleteSongs();
                 }
-
             }
+            else if (setListListBox.SelectedItem != null)
+            {
+                if (e.KeyCode == Keys.Back && songSearchString.Length > 0)
+                {
+                    songSearchString = songSearchString.Substring(0, songSearchString.Length - 1);
+                }
+                else if (e.KeyCode.ToString().Length == 1)
+                {
+                    songSearchString += e.KeyCode.ToString().ToLower();
+                }
+                if (songSearchString.Length > 0)
+                {
+                    songsListBox.Items.Clear();
+                    foreach (var song in currentSongList)
+                    {
+                        if (song.ToLower().StartsWith(songSearchString.ToString().ToLower()))
+                        {
+                            songsListBox.Items.Add(song);
+                        }
+                    }
+                    songSearchLabel.Text = songSearchString;
+                }
+                else
+                {
+                    songsListBox.Items.Clear();
+                    loadSongsForSearch(selectedSetList);
+                    songSearchLabel.Text = "";
+                }
+            }
+        
+
         }
+
 
         private void deleteSongs()
         {
-            string setList = setlistListBox.SelectedItem.ToString();
+            string setList = setListListBox.SelectedItem.ToString();
             string songName = songsListBox.SelectedItem.ToString();
             DialogResult result = MessageBox.Show($"Are you sure you want to delete {songName} from setlist: " + setList + "?",
            "Confirm Deletion",
@@ -1465,13 +1181,15 @@ namespace Dads_Audio_App
            MessageBoxIcon.Warning);
             if (result == DialogResult.Yes)
             {
+                currentSongList.Remove(songName);
                 songsListBox.Items.Remove(songsListBox.SelectedItem.ToString());
                 saveSetList2(setList);
+
             }
         }
         private void deleteSetList()
         {
-            string val = setlistListBox.SelectedItem.ToString();
+            string val = setListListBox.SelectedItem.ToString();
             string val2 = folderDirectory + "\\Set Lists" + "\\" + "SetList_" + val + ".txt";
             DialogResult result = MessageBox.Show("Are you sure you want to delete setlist " + val + "?",
            "Confirm Deletion",
@@ -1480,12 +1198,24 @@ namespace Dads_Audio_App
             if (result == DialogResult.Yes)
             {
                 System.IO.File.Delete(val2);
-                setlistListBox.Items.Remove(val);
+                setListListBox.Items.Remove(val);
                 GlobalVariables.setLists.Remove(val.ToLower());
                 songsListBox.Items.Clear();
-
+                setListList.Remove(val);
             }
+            saveSetListOrder();
         }
+
+        private void saveSetListOrder()
+        {
+            List<string> setListItems = new();
+            foreach (var setList in setListListBox.Items)
+            {
+                setListItems.Add(setList.ToString());
+            }
+            System.IO.File.WriteAllLines(folderDirectory + "\\ProgramInfo\\setListOrder.txt", setListItems.ToArray());
+        }
+
         private void addSong()
         {
             OpenFileDialog dialog = new OpenFileDialog();
@@ -1502,7 +1232,7 @@ namespace Dads_Audio_App
                 }
             }
 
-            saveSetList2(setlistListBox.SelectedItem.ToString());
+            saveSetList2(setListListBox.SelectedItem.ToString());
         }
 
         private void songsListBox_DragEnter(object sender, DragEventArgs e)
@@ -1512,7 +1242,7 @@ namespace Dads_Audio_App
 
         private void songsListBox_MouseUp(object sender, MouseEventArgs e)
         {
-            if (setlistListBox.SelectedItem != null)
+            if (setListListBox.SelectedItem != null)
             {
                 int index = songsListBox.IndexFromPoint(e.Location);
                 if (index != ListBox.NoMatches)
@@ -1532,7 +1262,7 @@ namespace Dads_Audio_App
                         songsContextMenu.Show(mousePos);
                     }
                 }
-                else if (e.Button == MouseButtons.Right && editingCheckBox.Checked && setlistListBox.SelectedItem != null)
+                else if (e.Button == MouseButtons.Right && editingCheckBox.Checked && setListListBox.SelectedItem != null)
                 {
 
                     songsContextMenu.Items[1].Visible = false;
@@ -1554,7 +1284,9 @@ namespace Dads_Audio_App
             // Remove the dragged item and insert it at the new index
             songsListBox.Items.RemoveAt(_dragIndex);
             songsListBox.Items.Insert(index, data);
+            saveSetList2(selectedSetList);
         }
+
 
         private void songsListBox_MouseMove(object sender, MouseEventArgs e)
         {
@@ -1571,13 +1303,13 @@ namespace Dads_Audio_App
 
         private void setlistListBox_MouseUp(object sender, MouseEventArgs e)
         {
-            int index = setlistListBox.IndexFromPoint(e.Location);
+            int index = setListListBox.IndexFromPoint(e.Location);
             if (index != ListBox.NoMatches)
             {
                 if (e.Button == MouseButtons.Left)
                 {
                     songsListBox.Items.Clear();
-                    string selectedItem = setlistListBox.Items[index].ToString();
+                    string selectedItem = setListListBox.Items[index].ToString();
                     loadSongs(selectedItem);
                     selectedSetList = selectedItem;
                     selectedSetListIndex = index;
@@ -1587,7 +1319,7 @@ namespace Dads_Audio_App
                 else if (e.Button == MouseButtons.Right && editingCheckBox.Checked)
                 {
                     setListContextMenu.Items[1].Visible = true;
-                    setlistListBox.SelectedIndex = index;
+                    setListListBox.SelectedIndex = index;
                     Point mousePos = Control.MousePosition;
                     setListContextMenu.Show(mousePos);
                 }
@@ -1625,6 +1357,50 @@ namespace Dads_Audio_App
                     saveFileV2(currentSongName);
                 }
             }
+        }
+
+        private void setlistListBox_DragDrop(object sender, DragEventArgs e)
+        {
+            Point point = setListListBox.PointToClient(new Point(e.X, e.Y));
+            int index = setListListBox.IndexFromPoint(point);
+
+            if (index < 0) index = setListListBox.Items.Count - 1;
+
+            object data = e.Data.GetData(typeof(string));
+
+            // Remove the dragged item and insert it at the new index
+            setListListBox.Items.RemoveAt(_dragIndexSetList);
+            setListListBox.Items.Insert(index, data);
+            saveSetListOrder();
+        }
+
+        private void setListListBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isDraggingSetList && e.Button == MouseButtons.Left)
+            {
+                setListListBox.DoDragDrop(setListListBox.Items[_dragIndexSetList], DragDropEffects.Move);
+            }
+        }
+
+        private void setListListBox_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void setListListBox_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+
+        private void setListListBox_MouseHover(object sender, EventArgs e)
+        {
+
+        }
+
+        private void songsListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+
         }
     }
 }
