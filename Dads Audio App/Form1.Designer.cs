@@ -385,13 +385,15 @@
             flagsContextStrip.ImageScalingSize = new Size(20, 20);
             flagsContextStrip.Items.AddRange(new ToolStripItem[] { deleteToolStripMenuItem2 });
             flagsContextStrip.Name = "flagsContextStrip";
-            flagsContextStrip.Size = new Size(108, 26);
+            flagsContextStrip.Size = new Size(181, 48);
+            flagsContextStrip.Opening += flagsContextStrip_Opening;
             // 
             // deleteToolStripMenuItem2
             // 
             deleteToolStripMenuItem2.Name = "deleteToolStripMenuItem2";
-            deleteToolStripMenuItem2.Size = new Size(107, 22);
+            deleteToolStripMenuItem2.Size = new Size(180, 22);
             deleteToolStripMenuItem2.Text = "Delete";
+            deleteToolStripMenuItem2.Click += deleteToolStripMenuItem2_Click;
             // 
             // Form1
             // 

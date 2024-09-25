@@ -32,6 +32,7 @@ using Button = System.Windows.Forms.Button;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 using NAudio.CoreAudioApi;
 using TextBox = System.Windows.Forms.TextBox;
+using System.Diagnostics;
 
 namespace Dads_Audio_App
 {
@@ -62,6 +63,7 @@ namespace Dads_Audio_App
         private bool stillTyping;
         List<Control[]> flagControls = new List<Control[]>();
         private int draggingIndex;
+        private int flagsButtonToDeleteIndex;
         bool dragging;
         int xoffset;
         private PictureBox currentBehindWave;
@@ -69,7 +71,7 @@ namespace Dads_Audio_App
         private int selectedSetListIndex;
         private string selectedSong;
         private List<string[]> allFlagsInfo = new List<string[]>();
-        private string currentSongName;
+        private string currentSongNameNoExt;
         private bool selectedSongLast;
         private bool flagTextIsTyping = false;
         private int selectedFlagTextIndex;
@@ -252,7 +254,8 @@ namespace Dads_Audio_App
         {
             try
             {
-                folderDirectory = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Mitchells Audio App");
+                folderDirectory = @"C:\Users\mitch\AppData\Local\Mitchells Audio App";
+                //folderDirectory = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Mitchells Audio App");
                 //folderDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Mitchells Audio App";
                 Directory.CreateDirectory(folderDirectory);
                 Directory.CreateDirectory(folderDirectory + "\\Set Lists");
@@ -260,8 +263,7 @@ namespace Dads_Audio_App
                 Directory.CreateDirectory(folderDirectory + "\\Songs");
                 Directory.CreateDirectory(folderDirectory + "\\SongInfo");
                 Directory.CreateDirectory(folderDirectory + "\\ProgramInfo");
-                FileInfo fileInfo = new System.IO.FileInfo(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
-                if (!fileInfo.Exists)
+                if (!File.Exists(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt"))
                 {
                     System.IO.File.Create(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
                 }
@@ -280,7 +282,7 @@ namespace Dads_Audio_App
 
         }
 
-        public async Task createAndSaveWave(string location, string songName)
+        public async Task createAndSaveWave(string location, string songNameNoExt)
         {
             AveragePeakProvider averagePeakProvider = new AveragePeakProvider(4); // e.g. 4
 
@@ -313,16 +315,15 @@ namespace Dads_Audio_App
 
             System.Drawing.Image playingImage = renderer2.Render(audioFilePath, averagePeakProvider, myRendererSettings2);
 
-            string name = songName.Split('.')[0];
-
-            if (!Directory.Exists(folderDirectory + "\\Waves\\" + name))
+            if (!Directory.Exists(folderDirectory + "\\Waves\\" + songNameNoExt))
             {
-                Directory.CreateDirectory(folderDirectory + "\\Waves\\" + name);
+                Directory.CreateDirectory(folderDirectory + "\\Waves\\" + songNameNoExt);
             }
+            playingImage.Save(folderDirectory + "\\Waves\\" + songNameNoExt + "\\while_wave_" + songNameNoExt + ".png", ImageFormat.Png);
+            afterImage.Save(folderDirectory + "\\Waves\\" + songNameNoExt + "\\after_wave_" + songNameNoExt + ".png", ImageFormat.Png);
 
-            playingImage.Save(folderDirectory + "\\Waves\\" + name + "\\while_wave_" + name + ".png", ImageFormat.Png);
-            afterImage.Save(folderDirectory + "\\Waves\\" + name + "\\after_wave_" + name + ".png", ImageFormat.Png);
         }
+
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -411,7 +412,7 @@ namespace Dads_Audio_App
             flagCount++;
             allFlagsInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), $"Flag {flagCount}" });
             createFlagAt(audioTrackLocationProgressBar.Value, $"Flag {flagCount}");
-            saveFileV2(currentSongName);
+            saveFileV2(currentSongNameNoExt);
         }
 
 
@@ -424,11 +425,11 @@ namespace Dads_Audio_App
         {
             generateWaveLabel.BringToFront();
             generateWaveLabel.Visible = true;
-            string name = songName.Split('.')[0];
-            if (Directory.Exists(folderDirectory + "\\Waves\\" + name))
+            string songNameNoExt = Path.GetFileNameWithoutExtension(songName);
+            if (Directory.Exists(folderDirectory + "\\Waves\\" + songNameNoExt))
             {
-                System.IO.FileInfo whileWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + name + "\\while_wave_" + name + ".png");
-                System.IO.FileInfo afterWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + name + "\\after_wave_" + name + ".png");
+                System.IO.FileInfo whileWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + songNameNoExt + "\\while_wave_" + songNameNoExt + ".png");
+                System.IO.FileInfo afterWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + songNameNoExt + "\\after_wave_" + songNameNoExt + ".png");
                 if (whileWaveInfo.Exists && whileWaveInfo.Exists)
                 {
                     loadAfterWave(afterWaveInfo.FullName);
@@ -436,7 +437,7 @@ namespace Dads_Audio_App
                 }
                 else
                 {
-                    await Task.Run(() => createAndSaveWave(folderDirectory + "\\Songs\\" + songName, songName));
+                    await Task.Run(() => createAndSaveWave(folderDirectory + "\\Songs\\" + songName, songNameNoExt));
 
                     try
                     {
@@ -451,10 +452,10 @@ namespace Dads_Audio_App
             }
             else
             {
-                await Task.Run(() => createAndSaveWave(folderDirectory + "\\Songs\\" + songName, songName));
+                await Task.Run(() => createAndSaveWave(folderDirectory + "\\Songs\\" + songName, songNameNoExt));
 
-                System.IO.FileInfo whileWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + name + "\\while_wave_" + name + ".png");
-                System.IO.FileInfo afterWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + name + "\\after_wave_" + name + ".png");
+                System.IO.FileInfo whileWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + songNameNoExt + "\\while_wave_" + songNameNoExt + ".png");
+                System.IO.FileInfo afterWaveInfo = new FileInfo(folderDirectory + "\\Waves\\" + songNameNoExt + "\\after_wave_" + songNameNoExt + ".png");
                 try
                 {
                     loadAfterWave(afterWaveInfo.FullName);
@@ -505,7 +506,7 @@ namespace Dads_Audio_App
                     flagCount++;
                     allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
                     createFlagAt(PBValue, $"Flag {flagCount}");
-                    saveFileV2(currentSongName);
+                    saveFileV2(currentSongNameNoExt);
                 }
             }
         }
@@ -558,6 +559,7 @@ namespace Dads_Audio_App
 
             flagText.TextChanged += FlagText_TextChanged;
             flagText.Enter += flagText_Enter;
+            flagText.PreviewKeyDown += flagText_PreviewKeyDown;
 
             PictureBox line = new PictureBox();
             line.Image = lineImageChangedColor;
@@ -602,6 +604,35 @@ namespace Dads_Audio_App
 
         }
 
+        private void flagText_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
+                saveFileV2(currentSongNameNoExt);
+                flagTextCoolDown.Stop();
+                TextBox textBox = (TextBox)flagControls[selectedFlagTextIndex][0];
+
+                using (Graphics g = textBox.CreateGraphics())
+                {
+                    // Measure the size of the text
+                    SizeF stringSize = g.MeasureString(textBox.Text, textBox.Font);
+                    int offset = 0;
+                    if (stringSize.Width < 16)
+                    {
+                        stringSize.Width = 0;
+                        offset = 16;
+                    }
+
+                    textBox.Width = (int)stringSize.Width + offset;
+                }
+
+                textBox.SelectionStart = 0; // Move the caret to the end of the text
+                textBox.ScrollToCaret();
+            }
+            flagTextIsTyping = false;
+        }
+
         private void flagText_Enter(object sender, EventArgs e)
         {
             if (!editingCheckBox.Checked)
@@ -636,7 +667,7 @@ namespace Dads_Audio_App
             int PBValue = (int)(proportion * PBmaxValue); // Calculate the PBValue
 
             allFlagsInfo[draggingIndex][0] = PBValue.ToString();
-            saveFileV2(currentSongName);
+            saveFileV2(currentSongNameNoExt);
         }
 
         private void MoveBtn_MouseMove(object sender, MouseEventArgs e)
@@ -692,6 +723,8 @@ namespace Dads_Audio_App
                 {
                     Point mousePos = Control.MousePosition;
                     flagsContextStrip.Show(mousePos);
+                    Button b = (Button)sender;
+                    flagsButtonToDeleteIndex = flagControls.FindIndex(x => x[2] == b);
                     dragging = false;
                 }
 
@@ -781,11 +814,15 @@ namespace Dads_Audio_App
 
         private void loadSetList2() //For ListBox
         {
-            string[] setListOrder = System.IO.File.ReadAllLines(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
-            foreach (var setList in setListOrder)
+            FileInfo info = new FileInfo(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
+            if (info.Exists)
             {
-                setListListBox.Items.Add(setList);
-                GlobalVariables.setLists.Add(setList.ToLower());
+                string[] setListOrder = System.IO.File.ReadAllLines(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
+                foreach (var setList in setListOrder)
+                {
+                    setListListBox.Items.Add(setList);
+                    GlobalVariables.setLists.Add(setList.ToLower());
+                }
             }
         }
 
@@ -793,7 +830,7 @@ namespace Dads_Audio_App
         {
             if (!stillTyping)
             {
-                saveFileV2(currentSongName);
+                saveFileV2(currentSongNameNoExt);
                 timer2.Stop();
             }
             stillTyping = false;
@@ -872,7 +909,7 @@ namespace Dads_Audio_App
                 {
                     lyricTextBox.Font = fontDialog1.Font;
                 }
-                saveFileV2(currentSongName);
+                saveFileV2(currentSongNameNoExt);
             }
 
         }
@@ -928,11 +965,11 @@ namespace Dads_Audio_App
             allFlagsInfo.Clear();
             controlPanel.Controls.Clear();
             flagControls.Clear();
+            string songNameNoExt = Path.GetFileNameWithoutExtension(songName);
 
             lyricTextBox.Enabled = true;
             fontButton.Enabled = true;
-            string songNameNoExt = songName.Split(".")[0];
-            currentSongName = songNameNoExt;
+            currentSongNameNoExt = songNameNoExt;
 
 
             nextFlagName = null;
@@ -1006,7 +1043,7 @@ namespace Dads_Audio_App
             if (!flagTextIsTyping || this.ActiveControl != flagControls[selectedFlagTextIndex][0])
             {
                 allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
-                saveFileV2(currentSongName);
+                saveFileV2(currentSongNameNoExt);
                 flagTextCoolDown.Stop();
                 TextBox textBox = (TextBox)flagControls[selectedFlagTextIndex][0];
 
@@ -1166,7 +1203,7 @@ namespace Dads_Audio_App
                     songSearchLabel.Text = "";
                 }
             }
-        
+
 
         }
 
@@ -1225,11 +1262,21 @@ namespace Dads_Audio_App
             List<string> selectedFiles = new List<string>();
             if (result == DialogResult.OK)
             {
-                selectedFiles = dialog.FileNames.Select(x => Path.GetFileName(x)).ToList();
-                foreach (var item in selectedFiles)
+                selectedFiles = dialog.FileNames.ToList();
+                foreach (var item in selectedFiles.Select(x => Path.GetFileName(x)))
                 {
                     songsListBox.Items.Add(item);
                 }
+                foreach (var item in dialog.FileNames)
+                {
+                    string songDirect = Path.GetFullPath(item);
+                    string correctDirect = folderDirectory + "\\Songs" + "\\" + Path.GetFileName(item);
+                    if (songDirect != correctDirect)
+                    {
+                        File.Move(songDirect, correctDirect);
+                    }
+                }
+
             }
 
             saveSetList2(setListListBox.SelectedItem.ToString());
@@ -1354,7 +1401,7 @@ namespace Dads_Audio_App
                     flagCount++;
                     allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
                     createFlagAt(PBValue, $"Flag {flagCount}");
-                    saveFileV2(currentSongName);
+                    saveFileV2(currentSongNameNoExt);
                 }
             }
         }
@@ -1400,6 +1447,32 @@ namespace Dads_Audio_App
 
         private void songsListBox_KeyDown(object sender, KeyEventArgs e)
         {
+
+        }
+
+        private void flagsContextStrip_Opening(object sender, CancelEventArgs e)
+        {
+
+        }
+
+        private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
+            allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text);            
+
+            for (int i = 0; i <= 2; i++)
+            {
+                Control controlToDelete = controlsToDelete[i];
+
+                if (controlToDelete != null && controlToDelete.Parent != null)
+                {
+                    controlToDelete.Parent.Controls.Remove(controlToDelete);
+                    controlToDelete.Dispose();
+                }
+            }
+
+            flagControls.RemoveAt(flagsButtonToDeleteIndex);
+            saveFileV2(currentSongNameNoExt);
 
         }
     }
