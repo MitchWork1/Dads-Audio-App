@@ -33,6 +33,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 using NAudio.CoreAudioApi;
 using TextBox = System.Windows.Forms.TextBox;
 using System.Diagnostics;
+using System.Configuration;
 
 namespace Dads_Audio_App
 {
@@ -41,7 +42,6 @@ namespace Dads_Audio_App
         WaveOutEvent outputDevice;
         MediaFoundationReader mediaPlayer;
         string mediaAudioFileLocation;
-        TimeSpan songLength;
         bool isPlayingAudio = false;
         private AudioFileReader audioFileReader;
         private int flagCount = 0;
@@ -55,17 +55,20 @@ namespace Dads_Audio_App
         private Point mainLineLocation;
         private PictureBox mainLine;
         bool userDeletedRow = false;
-        string nextFlagName = null;
+        string nextFlagName = string.Empty;
         int nextFlagValue;
         int nextFlagTime;
         private string previousSelectedNodeName;
         private bool coolDown;
         private bool stillTyping;
         List<Control[]> flagControls = new List<Control[]>();
-        private int draggingIndex;
+        private int draggingIndexMoveBtn;
         private int flagsButtonToDeleteIndex;
-        bool dragging;
-        int xoffset;
+        bool draggingMoveBtn;
+        private bool draggingMainLineButton;
+        private int xoffsetMainLineButton;
+        private int yoffsetMainLineButton;
+        int xoffsetMoveBtn;
         private PictureBox currentBehindWave;
         private string selectedSetList;
         private int selectedSetListIndex;
@@ -75,7 +78,7 @@ namespace Dads_Audio_App
         private bool selectedSongLast;
         private bool flagTextIsTyping = false;
         private int selectedFlagTextIndex;
-        private int yoffset;
+        private int yoffsetMoveBtn;
         private int _dragIndex;
         private bool _isDragging;
         private int _dragIndexSetList;
@@ -85,7 +88,12 @@ namespace Dads_Audio_App
         private string songSearchString = string.Empty;
         private string setListSearchString = string.Empty;
         private List<string> setListList = new();
-
+        private Button mainLineButton;
+        private Point mainLineButtonLocation;
+        private bool wasPlayingBeforeMove;
+        private PictureBox currentInfrontWave;
+        private int waveX;
+        private int waveY;
 
         //Must add selecting audio and moving that file into songs folder
         //Questions
@@ -99,13 +107,24 @@ namespace Dads_Audio_App
             firstTimeStartUp();
             string launch = AppDomain.CurrentDomain.BaseDirectory;
             image = new Bitmap(launch + "\\Flag.png");
-            lineImage = new Bitmap(launch + "lineImage.png");
+            lineImage = new Bitmap(launch + "\\lineImage.png");
             image.MakeTransparent(Color.White);
             lineImage.MakeTransparent(Color.White);
             loadSetList2();
             createLine();
             editMode(false);
-            dragging = false;
+            draggingMoveBtn = false;
+        }
+
+        private void ListOutputDevices() //Not needed
+        {
+            int deviceCount = WaveOut.DeviceCount;
+            for (int i = 0; i < deviceCount; i++)
+            {
+                var capabilities = WaveOut.GetCapabilities(i);
+                string deviceName = capabilities.ProductName;
+                MessageBox.Show($"Device {i}: {deviceName}");
+            }
         }
 
 
@@ -121,6 +140,7 @@ namespace Dads_Audio_App
             setlistDeleteButton.Enabled = toggle;
             fontButton.Visible = toggle;
             lyricTextBox.ReadOnly = !toggle;
+            mainLineButton.Visible = toggle;
         }
 
         private void ApplyImageTransparency(Image img, float transparency)
@@ -156,6 +176,31 @@ namespace Dads_Audio_App
 
         private void createLine()
         {
+            int flagPicWidth = 16;
+            int flagPicHeight = 15;
+            int positionX = audioTrackLocationProgressBar.Location.X - flagPicWidth / 2 + 1;
+            int positionY = controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y + 75;
+
+            mainLineButton = new Button();
+            mainLineButton.Text = "";
+            mainLineButton.BackColor = Color.Transparent;
+            mainLineButton.FlatStyle = FlatStyle.Flat;
+            mainLineButton.Location = new Point(positionX, positionY);
+            mainLineButton.FlatAppearance.BorderSize = 0;
+            mainLineButton.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            mainLineButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
+            mainLineButton.BackgroundImageLayout = ImageLayout.Zoom;
+            mainLineButton.BackgroundImage = image;
+            mainLineButton.Size = new Size(flagPicWidth, flagPicHeight);
+            mainLineButtonLocation = mainLineButton.Location;
+
+            mainLineButton.MouseDown += mainLineButton_MouseDown;
+            mainLineButton.MouseUp += mainLineButton_MouseUp;
+            mainLineButton.MouseMove += mainLineButton_MouseMove;
+
+            this.Controls.Add(mainLineButton);
+            mainLineButton.Visible = false;
+
             PictureBox line = new PictureBox();
             line.Image = lineImage;
             line.Width = 2;
@@ -168,6 +213,7 @@ namespace Dads_Audio_App
             lineImageChangedColor = ChangeImageColorToBlue(lineImage);
             mainLineLocation = line.Location;
             mainLine = line;
+            mainLineButton.BringToFront();
         }
         private Bitmap ChangeImageColorToBlue(Bitmap originalImage)
         {
@@ -287,9 +333,9 @@ namespace Dads_Audio_App
             AveragePeakProvider averagePeakProvider = new AveragePeakProvider(4); // e.g. 4
 
             StandardWaveFormRendererSettings myRendererSettings = new StandardWaveFormRendererSettings();
-            myRendererSettings.Width = audioTrackLocationProgressBar.Width;
-            myRendererSettings.TopHeight = 32;
-            myRendererSettings.BottomHeight = 32;
+            myRendererSettings.Width = 1980;
+            myRendererSettings.TopHeight = 64;
+            myRendererSettings.BottomHeight = 64;
 
             myRendererSettings.BackgroundColor = Color.Transparent;
             myRendererSettings.TopPeakPen = new Pen(Color.FromArgb(52, 52, 52)); //204, 204, 204)
@@ -304,9 +350,9 @@ namespace Dads_Audio_App
 
             StandardWaveFormRendererSettings myRendererSettings2 = new StandardWaveFormRendererSettings();
 
-            myRendererSettings2.Width = audioTrackLocationProgressBar.Width;
-            myRendererSettings2.TopHeight = 32;
-            myRendererSettings2.BottomHeight = 32;
+            myRendererSettings2.Width = 1980;
+            myRendererSettings2.TopHeight = 64;
+            myRendererSettings2.BottomHeight = 64;
 
             myRendererSettings2.BackgroundColor = Color.Transparent;
             myRendererSettings2.TopPeakPen = new Pen(Color.FromArgb(255, 107, 46));
@@ -340,7 +386,7 @@ namespace Dads_Audio_App
             //    controlPanel.Location = new Point(-1 * xLocation, controlPanel.Location.Y);
             //}
 
-            if (mediaPlayer.Position < mediaPlayer.Length && currentBehindWave != null)
+            if (mediaPlayer.Position < mediaPlayer.Length && currentBehindWave != null && !draggingMainLineButton)
             {
                 var currentMilliseconds = (int)mediaPlayer.CurrentTime.TotalMilliseconds;
                 audioTrackLocationProgressBar.Value = currentMilliseconds;
@@ -350,6 +396,7 @@ namespace Dads_Audio_App
 
                 currentBehindWave.Size = new Size(xLocation, currentBehindWave.Height);
                 mainLine.Location = new Point(mainLineLocation.X + xLocation, mainLine.Location.Y);
+                mainLineButton.Location = new Point(mainLineButtonLocation.X + xLocation, mainLineButton.Location.Y);
             }
 
             currentTimeLabel.Text = mediaPlayer.CurrentTime.ToString(@"mm\:ss");
@@ -500,8 +547,8 @@ namespace Dads_Audio_App
                     int PBmaxValue = audioTrackLocationProgressBar.Maximum;
 
                     int relativeX = mousePoint.X - PBLocX;
-                    float proportion = (float)relativeX / PBSizeX; // Proportion of the xLocation on the progress bar
-                    int PBValue = (int)(proportion * PBmaxValue); // Calculate the PBValue
+                    float proportion = (float)relativeX / PBSizeX;
+                    int PBValue = (int)(proportion * PBmaxValue);
 
                     flagCount++;
                     allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
@@ -511,19 +558,34 @@ namespace Dads_Audio_App
             }
         }
 
+        private int xLocationToPBValue(int xLoc)
+        {
+            int PBLocX = audioTrackLocationProgressBar.Location.X;
+            int PBSizeX = audioTrackLocationProgressBar.Size.Width;
+            int PBmaxValue = audioTrackLocationProgressBar.Maximum;
+
+            int relativeX = xLoc - PBLocX;
+            float proportion = (float)relativeX / PBSizeX;
+            int PBValue = (int)(proportion * PBmaxValue);
+            return PBValue;
+        }
+
         private void loadWave(string fullName)
         {
             Image wave = new Bitmap(fullName);
-            PictureBox pictureBox1 = new PictureBox();
-            pictureBox1.Size = wave.Size;
-            pictureBox1.Image = wave;
+            currentInfrontWave = new PictureBox();
+            currentInfrontWave.Size = wave.Size;
+            currentInfrontWave.Image = wave;
             audioTrackLocationProgressBar.Visible = false;
-            pictureBox1.Location = audioTrackLocationProgressBar.Location;
+            currentInfrontWave.Location = audioTrackLocationProgressBar.Location;
 
-            pictureBox1.DoubleClick += wavePic_DoubleClick;
+            currentInfrontWave.DoubleClick += wavePic_DoubleClick;
 
-            controlPanel.Controls.Add(pictureBox1);
-            pictureBox1.SendToBack();
+            waveX = wave.Size.Width;
+            waveY = wave.Size.Height;
+
+            controlPanel.Controls.Add(currentInfrontWave);
+            currentInfrontWave.SendToBack();
             generateWaveLabel.Visible = false;
         }
 
@@ -629,8 +691,10 @@ namespace Dads_Audio_App
 
                 textBox.SelectionStart = 0; // Move the caret to the end of the text
                 textBox.ScrollToCaret();
+                deltaLabel.Focus();
+                flagTextIsTyping = false;
             }
-            flagTextIsTyping = false;
+
         }
 
         private void flagText_Enter(object sender, EventArgs e)
@@ -651,36 +715,71 @@ namespace Dads_Audio_App
             flagTextCoolDown.Start();
             selectedFlagTextIndex = flagControls.FindIndex(x => x[0].Text == textBox.Text);
         }
+        private void mainLineButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (!draggingMainLineButton) { return; }
+            draggingMainLineButton = false;
+            if (wasPlayingBeforeMove)
+            {
+                outputDevice.Play();
+            }
+        }
 
         private void MoveBtn_MouseUp(object sender, MouseEventArgs e)
         {
-            if (!dragging) { return; }
-            dragging = false;
-            int xLocation = flagControls[draggingIndex][2].Location.X;
-
-            int PBLocX = audioTrackLocationProgressBar.Location.X;
-            int PBSizeX = audioTrackLocationProgressBar.Size.Width;
-            int PBmaxValue = audioTrackLocationProgressBar.Maximum;
-
-            int relativeX = xLocation - PBLocX; // Get the relative x position on the progress bar
-            float proportion = (float)relativeX / PBSizeX; // Proportion of the xLocation on the progress bar
-            int PBValue = (int)(proportion * PBmaxValue); // Calculate the PBValue
-
-            allFlagsInfo[draggingIndex][0] = PBValue.ToString();
+            if (!draggingMoveBtn) { return; }
+            draggingMoveBtn = false;
+            int xLocation = flagControls[draggingIndexMoveBtn][1].Location.X + flagControls[draggingIndexMoveBtn][1].Width;
+            int PBValue = xLocationToPBValue(xLocation);
+            allFlagsInfo[draggingIndexMoveBtn][0] = PBValue.ToString();
             saveFileV2(currentSongNameNoExt);
         }
-
-        private void MoveBtn_MouseMove(object sender, MouseEventArgs e)
+        private void mainLineButton_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!dragging) return;
+            if (!draggingMainLineButton) return;
 
             Button b = (Button)sender;
-            int Xmoved = e.Location.X - xoffset;
-            int Ymoved = e.Location.Y - yoffset;
+            int Xmoved = e.Location.X - xoffsetMainLineButton;
+            int Ymoved = e.Location.Y - yoffsetMainLineButton;
 
             if (Math.Abs(Xmoved) > 1) // Skip very small moves
             {
-                if (flagControls[draggingIndex][1].Location.X + Xmoved <= audioTrackLocationProgressBar.Location.X || flagControls[draggingIndex][1].Location.X + Xmoved >= audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width)
+                if (mainLineButton.Location.X + Xmoved < audioTrackLocationProgressBar.Location.X)
+                {
+                    // Restrict to the minimum position of the progress bar
+                    Xmoved = audioTrackLocationProgressBar.Location.X - mainLineButton.Location.X;
+                }
+                else if (mainLineButton.Location.X + Xmoved > audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width - mainLineButton.Width)
+                {
+                    // Restrict to the maximum position of the progress bar
+                    Xmoved = (audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width) - mainLineButton.Location.X - mainLineButton.Width;
+                }
+                controlPanel.SuspendLayout();
+                mainLineButton.Location = new Point(mainLineButton.Location.X + Xmoved, mainLineButton.Location.Y);
+                mainLine.Location = new Point(mainLine.Location.X + Xmoved, mainLine.Location.Y);
+                currentBehindWave.Size = new Size(currentBehindWave.Size.Width + Xmoved, currentBehindWave.Height);
+                int PBValue = xLocationToPBValue(mainLine.Location.X);
+                TimeSpan timespan = TimeSpan.FromMilliseconds(PBValue);
+                mediaPlayer.CurrentTime = timespan;
+                // Resume layout after update
+                controlPanel.ResumeLayout();
+
+                // Force immediate refresh of the panel to update display
+                controlPanel.Refresh();
+
+            }
+        }
+        private void MoveBtn_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!draggingMoveBtn) return;
+
+            Button b = (Button)sender;
+            int Xmoved = e.Location.X - xoffsetMoveBtn;
+            int Ymoved = e.Location.Y - yoffsetMoveBtn;
+
+            if (Math.Abs(Xmoved) > 1) // Skip very small moves
+            {
+                if (flagControls[draggingIndexMoveBtn][1].Location.X + Xmoved <= audioTrackLocationProgressBar.Location.X || flagControls[draggingIndexMoveBtn][1].Location.X + Xmoved >= audioTrackLocationProgressBar.Location.X + audioTrackLocationProgressBar.Width)
                 {
                     Xmoved = 0;
                 }
@@ -691,9 +790,9 @@ namespace Dads_Audio_App
                 controlPanel.SuspendLayout();
 
                 // Update locations of all the controls in the group (Label, PictureBox, Button)
-                flagControls[draggingIndex][0].Location = new Point(flagControls[draggingIndex][0].Location.X + Xmoved, flagControls[draggingIndex][0].Location.Y + Ymoved);
-                flagControls[draggingIndex][1].Location = new Point(flagControls[draggingIndex][1].Location.X + Xmoved, flagControls[draggingIndex][1].Location.Y + Ymoved);
-                flagControls[draggingIndex][2].Location = new Point(flagControls[draggingIndex][2].Location.X + Xmoved, flagControls[draggingIndex][2].Location.Y + Ymoved);
+                flagControls[draggingIndexMoveBtn][0].Location = new Point(flagControls[draggingIndexMoveBtn][0].Location.X + Xmoved, flagControls[draggingIndexMoveBtn][0].Location.Y + Ymoved);
+                flagControls[draggingIndexMoveBtn][1].Location = new Point(flagControls[draggingIndexMoveBtn][1].Location.X + Xmoved, flagControls[draggingIndexMoveBtn][1].Location.Y + Ymoved);
+                flagControls[draggingIndexMoveBtn][2].Location = new Point(flagControls[draggingIndexMoveBtn][2].Location.X + Xmoved, flagControls[draggingIndexMoveBtn][2].Location.Y + Ymoved);
 
                 // Resume layout after update
                 controlPanel.ResumeLayout();
@@ -705,6 +804,35 @@ namespace Dads_Audio_App
 
         }
 
+        private void mainLineButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (outputDevice != null)
+            {
+                if (editingCheckBox.Checked)
+                {
+                    Button b;
+                    b = (Button)sender;
+
+                    draggingMainLineButton = true;
+                    xoffsetMainLineButton = e.X;
+                    yoffsetMainLineButton = e.Y;
+                    if (outputDevice.PlaybackState == PlaybackState.Playing)
+                    {
+                        outputDevice.Pause();
+                        wasPlayingBeforeMove = true;
+                    }
+                    else
+                    {
+                        wasPlayingBeforeMove = false;
+                    }
+                }
+                else
+                {
+                    draggingMainLineButton = false;
+                }
+            }
+        }
+
         private void MoveBtn_MouseDown(object sender, MouseEventArgs e)
         {
             if (editingCheckBox.Checked)
@@ -714,10 +842,10 @@ namespace Dads_Audio_App
                     Button b;
                     b = (Button)sender;
 
-                    draggingIndex = flagControls.FindIndex(x => x[2] == b);
-                    dragging = true;
-                    xoffset = e.X;
-                    yoffset = e.Y;
+                    draggingIndexMoveBtn = flagControls.FindIndex(x => x[2] == b);
+                    draggingMoveBtn = true;
+                    xoffsetMoveBtn = e.X;
+                    yoffsetMoveBtn = e.Y;
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
@@ -725,13 +853,13 @@ namespace Dads_Audio_App
                     flagsContextStrip.Show(mousePos);
                     Button b = (Button)sender;
                     flagsButtonToDeleteIndex = flagControls.FindIndex(x => x[2] == b);
-                    dragging = false;
+                    draggingMoveBtn = false;
                 }
 
             }
             else
             {
-                dragging = false;
+                draggingMoveBtn = false;
             }
 
 
@@ -840,12 +968,13 @@ namespace Dads_Audio_App
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
 
-            if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null & !lyricTextBox.Focused)
+            if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && this.ActiveControl != flagControls[selectedFlagTextIndex][0])
             {
+                setListListBox.SelectedItem = selectedSetList;
+                songsListBox.SelectedItem = selectedSong;
                 deltaLabel.Focus();
                 mediaPlayer.CurrentTime = new TimeSpan(0);
                 playButton.PerformClick();
-
                 coolDown = true;
                 coolDwon.Start();
             }
@@ -916,7 +1045,10 @@ namespace Dads_Audio_App
 
         private void editingCheckBox_KeyDown(object sender, KeyEventArgs e)
         {
-
+            if (e.KeyCode == Keys.Space)
+            {
+                e.SuppressKeyPress = true;
+            }
         }
 
         private void editingCheckBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -972,7 +1104,7 @@ namespace Dads_Audio_App
             currentSongNameNoExt = songNameNoExt;
 
 
-            nextFlagName = null;
+            nextFlagName = string.Empty;
             lyricTextBox.Rtf = string.Empty;
 
             if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Playing)
@@ -980,6 +1112,8 @@ namespace Dads_Audio_App
                 outputDevice.Stop();
                 outputDevice.Dispose();
                 isPlayingAudio = false;
+                audioTrackLocationProgressBar.Value = 0;
+                mediaPlayer.Dispose();
             }
 
             if (outputDevice == null)
@@ -1457,9 +1591,10 @@ namespace Dads_Audio_App
 
         private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
-            allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text);            
 
+            Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
+            int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
+            allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
             for (int i = 0; i <= 2; i++)
             {
                 Control controlToDelete = controlsToDelete[i];
@@ -1474,6 +1609,46 @@ namespace Dads_Audio_App
             flagControls.RemoveAt(flagsButtonToDeleteIndex);
             saveFileV2(currentSongNameNoExt);
 
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            setControlSizes();
+        }
+
+        private void setControlSizes()
+        {
+            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.005), treePanel.Location.Y), new Size(treePanel.Size.Width, (int)(ClientSize.Height * 0.40)));
+            setControlPanelAndChildrenSizes();
+        }
+
+        private void setTreePanelAndChildrenSizes(Point treePanelLoc, Size treePanelSize)
+        {
+            treePanel.Location = treePanelLoc;
+            treePanel.Size = treePanelSize;
+            setListListBox.Location = new Point(treePanel.Location.X, treePanel.Location.Y);
+            setListListBox.Size = new Size((int)(treePanel.Width * 0.4), treePanel.Size.Height - 7);
+            songsListBox.Location = new Point(treePanel.Location.X + setListListBox.Width + 1, treePanel.Location.Y);
+            songsListBox.Size = new Size((int)(treePanel.Width * 0.6) - 9, treePanel.Size.Height - 7);
+        }
+        private void setControlPanelAndChildrenSizes()
+        {
+            controlPanel.Location = new Point(0, (int)(ClientSize.Height * 0.788));
+            controlPanel.Size = new Size(ClientSize.Width, controlPanel.Size.Height);
+            audioTrackLocationProgressBar.Size = new Size(ClientSize.Width - 66, audioTrackLocationProgressBar.Height);
+            mainLine.Location = new Point(controlPanel.Location.X + audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y - 25);
+            mainLineButton.Location = new Point(controlPanel.Location.X + audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y + 75);
+            //if (currentInfrontWave != null && currentInfrontWave != null)
+            //{
+            //    currentInfrontWave.Size = new Size(audioTrackLocationProgressBar.Size.Width, yNewAspectRatio(audioTrackLocationProgressBar.Size.Width, waveX, waveY));
+            //    currentInfrontWave.SizeMode = PictureBoxSizeMode.StretchImage;
+            //}
+            
+        }
+        public static int yNewAspectRatio(int newXWave, int xWave, int yWave)
+        {
+            int newYWave = (int) ((newXWave * yWave) / xWave);
+            return newYWave;
         }
     }
 }
