@@ -34,6 +34,8 @@ using NAudio.CoreAudioApi;
 using TextBox = System.Windows.Forms.TextBox;
 using System.Diagnostics;
 using System.Configuration;
+using System.Reflection;
+
 
 namespace Dads_Audio_App
 {
@@ -60,7 +62,6 @@ namespace Dads_Audio_App
         int nextFlagTime;
         private string previousSelectedNodeName;
         private bool coolDown;
-        private bool stillTyping;
         List<Control[]> flagControls = new List<Control[]>();
         private int draggingIndexMoveBtn;
         private int flagsButtonToDeleteIndex;
@@ -94,6 +95,9 @@ namespace Dads_Audio_App
         private PictureBox currentInfrontWave;
         private int waveX;
         private int waveY;
+        private bool fromSearch;
+        private List<string[]> lyricScrollInfo = new List<string[]>();
+        private bool scrollCoolDownBool;
 
         //Must add selecting audio and moving that file into songs folder
         //Questions
@@ -104,6 +108,7 @@ namespace Dads_Audio_App
         public Form1()
         {
             InitializeComponent();
+            this.WindowState = FormWindowState.Maximized; // Maximize the window
             firstTimeStartUp();
             string launch = AppDomain.CurrentDomain.BaseDirectory;
             image = new Bitmap(launch + "\\Flag.png");
@@ -130,17 +135,21 @@ namespace Dads_Audio_App
 
         private void editMode(bool toggle)
         {
-            flagButton.Enabled = toggle;
-            flagButton.Visible = toggle;
             newSetListButton.Enabled = toggle;
             newSetListButton.Visible = toggle;
             addSongsButton.Enabled = toggle;
             addSongsButton.Visible = toggle;
             setlistDeleteButton.Visible = toggle;
             setlistDeleteButton.Enabled = toggle;
-            fontButton.Visible = toggle;
             lyricTextBox.ReadOnly = !toggle;
-            mainLineButton.Visible = toggle;
+            fontButton.Visible = toggle;
+            if (selectedSong != null)
+            {
+                mainLineButton.Visible = toggle;
+                flagButton.Enabled = toggle;
+                flagButton.Visible = toggle;
+                saveScrollPos.Visible = toggle;
+            }
         }
 
         private void ApplyImageTransparency(Image img, float transparency)
@@ -333,9 +342,9 @@ namespace Dads_Audio_App
             AveragePeakProvider averagePeakProvider = new AveragePeakProvider(4); // e.g. 4
 
             StandardWaveFormRendererSettings myRendererSettings = new StandardWaveFormRendererSettings();
-            myRendererSettings.Width = 1980;
-            myRendererSettings.TopHeight = 64;
-            myRendererSettings.BottomHeight = 64;
+            myRendererSettings.Width = audioTrackLocationProgressBar.Width;
+            myRendererSettings.TopHeight = 32;
+            myRendererSettings.BottomHeight = 32;
 
             myRendererSettings.BackgroundColor = Color.Transparent;
             myRendererSettings.TopPeakPen = new Pen(Color.FromArgb(52, 52, 52)); //204, 204, 204)
@@ -350,9 +359,9 @@ namespace Dads_Audio_App
 
             StandardWaveFormRendererSettings myRendererSettings2 = new StandardWaveFormRendererSettings();
 
-            myRendererSettings2.Width = 1980;
-            myRendererSettings2.TopHeight = 64;
-            myRendererSettings2.BottomHeight = 64;
+            myRendererSettings2.Width = audioTrackLocationProgressBar.Width;
+            myRendererSettings2.TopHeight = 32;
+            myRendererSettings2.BottomHeight = 32;
 
             myRendererSettings2.BackgroundColor = Color.Transparent;
             myRendererSettings2.TopPeakPen = new Pen(Color.FromArgb(255, 107, 46));
@@ -430,6 +439,15 @@ namespace Dads_Audio_App
                 deltaLabel.Text = "-";
                 deltaTimeLabel.Text = "-";
             }
+
+            int index = lyricScrollInfo.FindIndex(x => int.Parse(x[0]) <= audioTrackLocationProgressBar.Value + 100 && int.Parse(x[0]) >= audioTrackLocationProgressBar.Value - 100);
+            if (index != -1 && !scrollCoolDownBool)
+            {
+                scrollCoolDownBool = true;
+                scrollCoolDown.Start();
+                lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[index][2]);
+                lyricTextBox.ScrollToCaret();
+            }
         }
 
 
@@ -456,10 +474,13 @@ namespace Dads_Audio_App
 
         private void flagButton_Click(object sender, EventArgs e)
         {
-            flagCount++;
-            allFlagsInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), $"Flag {flagCount}" });
-            createFlagAt(audioTrackLocationProgressBar.Value, $"Flag {flagCount}");
-            saveFileV2(currentSongNameNoExt);
+            if (selectedSong != null)
+            {
+                flagCount++;
+                allFlagsInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), $"Flag {flagCount}" });
+                createFlagAt(audioTrackLocationProgressBar.Value, $"Flag {flagCount}");
+                saveFileV2(currentSongNameNoExt);
+            }
         }
 
 
@@ -536,7 +557,6 @@ namespace Dads_Audio_App
         {
             if (editingCheckBox.Checked)
             {
-
                 Control control = (Control)sender;
                 Point mousePoint = this.PointToClient(MousePosition);
 
@@ -882,8 +902,7 @@ namespace Dads_Audio_App
 
         private void lyricTextBox_TextChanged(object sender, EventArgs e)
         {
-            stillTyping = true;
-            timer2.Start();
+
         }
 
         private void newSetListButton_Click(object sender, EventArgs e)
@@ -942,6 +961,7 @@ namespace Dads_Audio_App
 
         private void loadSetList2() //For ListBox
         {
+            GlobalVariables.setLists.Clear();
             FileInfo info = new FileInfo(folderDirectory + "\\ProgramInfo" + "\\setListOrder.txt");
             if (info.Exists)
             {
@@ -954,29 +974,26 @@ namespace Dads_Audio_App
             }
         }
 
-        private void timer2_Tick(object sender, EventArgs e)
-        {
-            if (!stillTyping)
-            {
-                saveFileV2(currentSongNameNoExt);
-                timer2.Stop();
-            }
-            stillTyping = false;
-
-        }
-
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
 
-            if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && this.ActiveControl != flagControls[selectedFlagTextIndex][0])
+            if (!fromSearch)
             {
-                setListListBox.SelectedItem = selectedSetList;
-                songsListBox.SelectedItem = selectedSong;
-                deltaLabel.Focus();
-                mediaPlayer.CurrentTime = new TimeSpan(0);
-                playButton.PerformClick();
-                coolDown = true;
-                coolDwon.Start();
+                if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && this.ActiveControl != flagControls[selectedFlagTextIndex][0] && !songsListBox.Focused && !setListListBox.Focused)
+                {
+                    setListListBox.SelectedItem = selectedSetList;
+                    songsListBox.SelectedItem = selectedSong;
+                    deltaLabel.Focus();
+                    mediaPlayer.CurrentTime = new TimeSpan(0);
+                    playButton.PerformClick();
+                    coolDown = true;
+                    coolDwon.Start();
+                }
+            }
+            else
+            {
+                fromSearch = false;
+                currentTimeLabel.Focus();
             }
             if (e.KeyCode == Keys.K && !coolDown)
             {
@@ -1063,6 +1080,8 @@ namespace Dads_Audio_App
 
         private void loadSongs(string setListName)
         {
+            currentSongList.Clear();
+            songsListBox.Items.Clear();
             string file = folderDirectory + "\\Set Lists" + "\\" + "SetList_" + setListName + ".txt";
             string[] songList = System.IO.File.ReadAllLines(file);
             foreach (string song in songList)
@@ -1093,7 +1112,6 @@ namespace Dads_Audio_App
 
         private void playSongV2(bool fromPlay, string songName)
         {
-
             allFlagsInfo.Clear();
             controlPanel.Controls.Clear();
             flagControls.Clear();
@@ -1135,6 +1153,7 @@ namespace Dads_Audio_App
                 string[] infoSplit = info.Split('$');
                 string allFlags = infoSplit[0];
                 string allLyrics = infoSplit[1];
+                string[] lyricScroll = infoSplit[2].Split('^');
                 string[] flagBreakDown = allFlags.Split('^');
 
                 for (int i = 1; i < flagBreakDown.Count(); i++)
@@ -1142,12 +1161,22 @@ namespace Dads_Audio_App
                     string[] split = flagBreakDown[i].Split(';');
                     allFlagsInfo.Add(new string[] { split[0], split[1] });
                 }
+                for (int i = 1; i < lyricScroll.Count(); i++)
+                {
+                    string[] split = lyricScroll[i].Split(';');
+                    lyricScrollInfo.Add(new string[] { split[0], split[1], split[2] }); //[0]-progressbarvalue [1]-name [2]-scrollvalue
+                }
 
                 lyricTextBox.Rtf = allLyrics;
             }
             flagCount = allFlagsInfo.Count();
             createAllFlagsV2();
             timer1.Start();
+
+            if (editingCheckBox.Checked)
+            {
+                editMode(true);
+            }
         }
 
         private void createAllFlagsV2()
@@ -1162,12 +1191,16 @@ namespace Dads_Audio_App
         private void saveFileV2(string songName)
         {
             string flagText = string.Empty;
+            string lyricScroll = string.Empty;
             foreach (var flag in allFlagsInfo)
             {
                 flagText += "^" + flag[0] + ";" + flag[1]; //flag[0] = name, flag[1] = PBvalue
             }
-
-            string text = flagText + "$" + lyricTextBox.Rtf;
+            foreach (var scroll in lyricScrollInfo) //[0]-progressbarvalue [1]-name [2]-scrollvalue
+            {
+                lyricScroll += "^" + scroll[0] + ";" + scroll[1] + ";" + scroll[2];
+            }
+            string text = flagText + "$" + lyricTextBox.Rtf + "$" + lyricScroll;
             System.IO.File.WriteAllText(folderDirectory + "\\SongInfo" + "\\" + songName + ".txt", text);
         }
 
@@ -1208,6 +1241,8 @@ namespace Dads_Audio_App
 
         private void setlistListBox_MouseDown(object sender, MouseEventArgs e)
         {
+            songSearchString = "";
+            songSearchLabel.Text = "";
             int index = setListListBox.IndexFromPoint(e.Location);
             _dragIndexSetList = index;
             if (index != ListBox.NoMatches && editingCheckBox.Checked)
@@ -1230,7 +1265,6 @@ namespace Dads_Audio_App
 
         private void songsListBox_MouseDown(object sender, MouseEventArgs e)
         {
-
             int index = songsListBox.IndexFromPoint(e.Location);
             _dragIndex = index;
             if (index != ListBox.NoMatches && editingCheckBox.Checked)
@@ -1261,6 +1295,7 @@ namespace Dads_Audio_App
 
         private void setlistListBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
+            string selectedItem = setListListBox.SelectedItem?.ToString()?.ToLower();
             if (e.KeyCode == Keys.Delete /*|| e.KeyCode == Keys.Back*/)
             {
                 if (setListListBox.SelectedItem != null)
@@ -1277,11 +1312,31 @@ namespace Dads_Audio_App
                 else if (e.KeyCode.ToString().Length == 1)
                 {
                     setListSearchString += e.KeyCode.ToString().ToLower();
+                    setListSearchLabel.Visible = true;
+                }
+                else if (e.KeyCode == Keys.Space)
+                {
+                    if (setListListBox.SelectedItem != null)
+                    {
+                        string selectedItem2 = setListListBox.SelectedItem.ToString();
+                        selectedSetList = selectedItem2;
+                        selectedSetListIndex = setListListBox.SelectedIndex;
+                        setListSearchLabel.Text = "";
+                        setListSearchString = "";
+                        songsListBox.Items.Clear();
+                        loadSongs(selectedItem2);
+                        selectedSongLast = false;
+                        songsListBox.Focus();
+                        if (songsListBox.Items.Count > 0)
+                        {
+                            songsListBox.SelectedIndex = 0;
+                        }
+                    }
                 }
                 if (setListSearchString.Length > 0)
                 {
                     setListListBox.Items.Clear();
-                    foreach (var setList in setListList)
+                    foreach (var setList in GlobalVariables.setLists)
                     {
                         if (setList.ToLower().StartsWith(setListSearchString.ToString().ToLower()))
                         {
@@ -1295,12 +1350,32 @@ namespace Dads_Audio_App
                     setListListBox.Items.Clear();
                     loadSetList2();
                     setListSearchLabel.Text = "";
+                    setListSearchString = "";
+                    setListSearchLabel.Visible = false;
                 }
+
+                if (selectedItem != null)
+                {
+                    foreach (var item in setListListBox.Items)
+                    {
+                        if (item.ToString().ToLower() == selectedItem)
+                        {
+                            setListListBox.SelectedItem = item;
+                            break;
+                        }
+                    }
+                }
+                else if (setListListBox.Items.Count > 0)
+                {
+                    setListListBox.SelectedIndex = 0;
+                }
+
             }
         }
 
         private void songsListBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
+            string selectedItem = songsListBox.SelectedItem?.ToString()?.ToLower();
             if (e.KeyCode == Keys.Delete/* || e.KeyCode == Keys.Back*/)
             {
                 if (songsListBox.SelectedItem != null)
@@ -1317,6 +1392,24 @@ namespace Dads_Audio_App
                 else if (e.KeyCode.ToString().Length == 1)
                 {
                     songSearchString += e.KeyCode.ToString().ToLower();
+                    songSearchLabel.Visible = true;
+                }
+                else if (e.KeyCode == Keys.Space)
+                {
+                    if (songsListBox.SelectedItem != null)
+                    {
+                        int index = songsListBox.SelectedIndex;
+                        string songToPlay = songsListBox.SelectedItem.ToString();
+                        selectedSong = songToPlay;
+                        songsListBox.Items.Clear();
+                        loadSongsForSearch(setListListBox.SelectedItem.ToString());
+                        songSearchLabel.Text = "";
+                        songSearchString = "";
+                        playSongV2(false, songToPlay);
+                        currentTimeLabel.Focus();
+                        fromSearch = true;
+
+                    }
                 }
                 if (songSearchString.Length > 0)
                 {
@@ -1333,9 +1426,27 @@ namespace Dads_Audio_App
                 else
                 {
                     songsListBox.Items.Clear();
-                    loadSongsForSearch(selectedSetList);
+                    loadSongsForSearch(setListListBox.SelectedItem.ToString());
                     songSearchLabel.Text = "";
+                    songSearchString = "";
+                    songSearchLabel.Visible = false;
                 }
+            }
+
+            if (selectedItem != null)
+            {
+                foreach (var item in songsListBox.Items)
+                {
+                    if (item.ToString().ToLower() == selectedItem)
+                    {
+                        songsListBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+            else if (songsListBox.Items.Count > 0)
+            {
+                songsListBox.SelectedIndex = 0;
             }
 
 
@@ -1397,23 +1508,56 @@ namespace Dads_Audio_App
             if (result == DialogResult.OK)
             {
                 selectedFiles = dialog.FileNames.ToList();
-                foreach (var item in selectedFiles.Select(x => Path.GetFileName(x)))
+                var selectedFileNames = selectedFiles.Select(x => Path.GetFileName(x));
+                if (!selectedFileNames.Any(fileName => songsListBox.Items.Contains(fileName)))
                 {
-                    songsListBox.Items.Add(item);
-                }
-                foreach (var item in dialog.FileNames)
-                {
-                    string songDirect = Path.GetFullPath(item);
-                    string correctDirect = folderDirectory + "\\Songs" + "\\" + Path.GetFileName(item);
-                    if (songDirect != correctDirect)
+                    foreach (var item in selectedFiles.Select(x => Path.GetFileName(x)))
                     {
-                        File.Move(songDirect, correctDirect);
+                        songsListBox.Items.Add(item);
                     }
+                    foreach (var item in dialog.FileNames)
+                    {
+                        string songDirect = Path.GetFullPath(item);
+                        string correctDirect = folderDirectory + "\\Songs" + "\\" + Path.GetFileName(item);
+                        if (songDirect != correctDirect)
+                        {
+                            File.Move(songDirect, correctDirect);
+                        }
+                    }
+                    saveSetList2(setListListBox.SelectedItem.ToString());
+                }
+                else
+                {
+                    List<string> didNotAddList = new List<string>();
+                    didNotAddList = selectedFiles.Where(x => songsListBox.Items.Contains(Path.GetFileName(x))).ToList();
+                    selectedFiles = selectedFiles.Where(x => !didNotAddList.Contains(x)).ToList();
+
+                    if (selectedFiles.Count > 0)
+                    {
+                        foreach (var item in selectedFiles.Select(x => Path.GetFileName(x)))
+                        {
+                            songsListBox.Items.Add(item);
+                        }
+                        foreach (var item in dialog.FileNames)
+                        {
+                            string songDirect = Path.GetFullPath(item);
+                            string correctDirect = folderDirectory + "\\Songs" + "\\" + Path.GetFileName(item);
+                            if (songDirect != correctDirect)
+                            {
+                                File.Move(songDirect, correctDirect);
+                            }
+                        }
+                        saveSetList2(setListListBox.SelectedItem.ToString());
+                    }
+
+                    MessageBox.Show($"Did not add the following songs as they already exist in this setlist:\n\n-{string.Join("\n-", didNotAddList.Select(x => Path.GetFileName(x)))}", "Files not added");
+
+
                 }
 
             }
 
-            saveSetList2(setListListBox.SelectedItem.ToString());
+
         }
 
         private void songsListBox_DragEnter(object sender, DragEventArgs e)
@@ -1451,6 +1595,7 @@ namespace Dads_Audio_App
                     songsContextMenu.Show(mousePos);
                 }
             }
+            currentTimeLabel.Focus();
         }
 
         private void songsListBox_DragDrop(object sender, DragEventArgs e)
@@ -1591,7 +1736,6 @@ namespace Dads_Audio_App
 
         private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
         {
-
             Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
             int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
             allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
@@ -1618,37 +1762,100 @@ namespace Dads_Audio_App
 
         private void setControlSizes()
         {
-            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.005), treePanel.Location.Y), new Size(treePanel.Size.Width, (int)(ClientSize.Height * 0.40)));
-            setControlPanelAndChildrenSizes();
+            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.005), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.30), (int)(ClientSize.Height * 0.75)));
+            setControlPanelAndChildrenSizes(new Point(0, (int)(ClientSize.Height * 0.82)), new Size(ClientSize.Width, controlPanel.Size.Height));
+            setTextPanelSizes();
+        }
+
+        private void setTextPanelSizes()
+        {
+            textPanel.Size = new Size((int)(ClientSize.Width * 0.4), (int)(ClientSize.Height * 0.75));
+            textPanel.Location = new Point((int)(ClientSize.Width - textPanel.Size.Width - ((int)(ClientSize.Width * 0.05))), textPanel.Location.Y);
+            lyricTextBox.Size = new Size(textPanel.Size.Width - 10, textPanel.Size.Height - 10);
+            lyricTextBox.Location = new Point(4, 4);
+            fontButton.Location = new Point(textPanel.Location.X, textPanel.Location.Y - fontButton.Size.Height - 4);
         }
 
         private void setTreePanelAndChildrenSizes(Point treePanelLoc, Size treePanelSize)
         {
             treePanel.Location = treePanelLoc;
             treePanel.Size = treePanelSize;
-            setListListBox.Location = new Point(treePanel.Location.X, treePanel.Location.Y);
-            setListListBox.Size = new Size((int)(treePanel.Width * 0.4), treePanel.Size.Height - 7);
-            songsListBox.Location = new Point(treePanel.Location.X + setListListBox.Width + 1, treePanel.Location.Y);
-            songsListBox.Size = new Size((int)(treePanel.Width * 0.6) - 9, treePanel.Size.Height - 7);
+
+            //SetList
+            setListListBox.Location = new Point(treePanel.Location.X, treePanel.Location.Y + addSongsButton.Height + songSearchLabel.Size.Height);
+            setListListBox.Size = new Size((int)(treePanel.Width * 0.35), treePanel.Size.Height - 7 - addSongsButton.Height - songSearchLabel.Height);
+            setListSearchLabel.Location = new Point(treePanel.Location.X, treePanel.Location.Y + addSongsButton.Height);
+            //Songs
+            songsListBox.Location = new Point(treePanel.Location.X + setListListBox.Width + 1, treePanel.Location.Y + addSongsButton.Height + songSearchLabel.Size.Height);
+            songsListBox.Size = new Size((int)(treePanel.Width * 0.65) - 9, treePanel.Size.Height - addSongsButton.Height - songSearchLabel.Height - 7);
+            songSearchLabel.Location = new Point(songsListBox.Location.X, treePanel.Location.Y + addSongsButton.Height);
+            //Buttons
+            newSetListButton.Location = new Point(setListListBox.Location.X, treePanel.Location.Y);
+            addSongsButton.Location = new Point(newSetListButton.Location.X + newSetListButton.Size.Width + 4, treePanel.Location.Y);
+            setlistDeleteButton.Location = new Point(addSongsButton.Location.X + addSongsButton.Width + 4, treePanel.Location.Y);
+            editingCheckBox.Location = new Point(setlistDeleteButton.Location.X + editingCheckBox.Width + 4, treePanel.Location.Y + 10);
+            generateWaveLabel.Location = new Point((int)(controlPanel.Size.Width - generateWaveLabel.Size.Width) / 2, treePanel.Location.Y);
+
         }
-        private void setControlPanelAndChildrenSizes()
+        private void setControlPanelAndChildrenSizes(Point controlPanelLocation, Size controlPanelSize)
         {
-            controlPanel.Location = new Point(0, (int)(ClientSize.Height * 0.788));
-            controlPanel.Size = new Size(ClientSize.Width, controlPanel.Size.Height);
-            audioTrackLocationProgressBar.Size = new Size(ClientSize.Width - 66, audioTrackLocationProgressBar.Height);
-            mainLine.Location = new Point(controlPanel.Location.X + audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y - 25);
-            mainLineButton.Location = new Point(controlPanel.Location.X + audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y + 75);
-            //if (currentInfrontWave != null && currentInfrontWave != null)
-            //{
-            //    currentInfrontWave.Size = new Size(audioTrackLocationProgressBar.Size.Width, yNewAspectRatio(audioTrackLocationProgressBar.Size.Width, waveX, waveY));
-            //    currentInfrontWave.SizeMode = PictureBoxSizeMode.StretchImage;
-            //}
-            
+            if (mainLine != null)
+            {
+                controlPanel.Location = controlPanelLocation;
+                controlPanel.Size = controlPanelSize;
+                audioTrackLocationProgressBar.Size = new Size(controlPanelSize.Width - 66, audioTrackLocationProgressBar.Height);
+                mainLine.Location = new Point(controlPanel.Location.X + audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y - 25);
+                mainLineButton.Location = new Point(controlPanel.Location.X + audioTrackLocationProgressBar.Location.X, controlPanel.Location.Y + audioTrackLocationProgressBar.Location.Y + 75);
+                currentTimeLabel.Location = new Point(audioTrackLocationProgressBar.Location.X, controlPanelLocation.Y + controlPanelSize.Height + 30);
+                playButton.Location = new Point(audioTrackLocationProgressBar.Location.X, controlPanelLocation.Y - 30);
+                flagButton.Location = new Point(playButton.Location.X + playButton.Size.Width + 7, playButton.Location.Y);
+                if (currentInfrontWave != null && currentInfrontWave != null)
+                {
+                    currentInfrontWave.Size = new Size(audioTrackLocationProgressBar.Size.Width, yNewAspectRatio(audioTrackLocationProgressBar.Size.Width, waveX, waveY));
+                    //currentInfrontWave.SizeMode = PictureBoxSizeMode.StretchImage;
+                    currentBehindWave.Size = currentInfrontWave.Size;
+                    //currentBehindWave.SizeMode = PictureBoxSizeMode.StretchImage;
+                }
+            }
         }
         public static int yNewAspectRatio(int newXWave, int xWave, int yWave)
         {
-            int newYWave = (int) ((newXWave * yWave) / xWave);
+            int newYWave = (int)((newXWave * yWave) / xWave);
             return newYWave;
+        }
+
+        private void songsListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lyricTextBox_Leave(object sender, EventArgs e)
+        {
+            saveFileV2(currentSongNameNoExt);
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (songsListBox.SelectedItem != null && songsListBox.SelectedIndex > -1)
+            {
+                saveFileV2(currentSongNameNoExt);
+            }
+        }
+
+        private void saveScrollPos_Click(object sender, EventArgs e)
+        {
+            if (currentSongNameNoExt != null && currentSongNameNoExt != "")
+            {
+                int caretIndex = lyricTextBox.SelectionStart;
+                lyricScrollInfo.Add(new string[] { audioTrackLocationProgressBar.Value.ToString(), "Name", caretIndex.ToString() });
+                saveFileV2(currentSongNameNoExt);
+            }
+        }
+
+        private void scrollCoolDown_Tick(object sender, EventArgs e)
+        {
+            scrollCoolDownBool = false;
+            scrollCoolDown.Stop();
         }
     }
 }
