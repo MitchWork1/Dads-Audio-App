@@ -309,7 +309,9 @@ namespace Dads_Audio_App
         {
             try
             {
-                folderDirectory = @"C:\Users\mitch\AppData\Local\Mitchells Audio App";
+                //folderDirectory = @"C:\Users\mitch\AppData\Local\Mitchells Audio App";
+                folderDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Mitchells Audio App");
+
                 //folderDirectory = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Mitchells Audio App");
                 //folderDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\Mitchells Audio App";
                 Directory.CreateDirectory(folderDirectory);
@@ -976,10 +978,7 @@ namespace Dads_Audio_App
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-
-            if (!fromSearch)
-            {
-                if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && this.ActiveControl != flagControls[selectedFlagTextIndex][0] && !songsListBox.Focused && !setListListBox.Focused)
+                if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && !flagTextIsTyping && !songsListBox.Focused && !setListListBox.Focused)
                 {
                     setListListBox.SelectedItem = selectedSetList;
                     songsListBox.SelectedItem = selectedSong;
@@ -989,13 +988,8 @@ namespace Dads_Audio_App
                     coolDown = true;
                     coolDwon.Start();
                 }
-            }
-            else
-            {
-                fromSearch = false;
-                currentTimeLabel.Focus();
-            }
-            if (e.KeyCode == Keys.K && !coolDown)
+
+            if (e.KeyCode == Keys.K && !coolDown && !songsListBox.Focused && !setListListBox.Focused)
             {
                 playButton.PerformClick();
                 coolDown = true;
@@ -1762,15 +1756,15 @@ namespace Dads_Audio_App
 
         private void setControlSizes()
         {
-            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.005), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.30), (int)(ClientSize.Height * 0.75)));
+            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.01), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.35), (int)(ClientSize.Height * 0.75)));
             setControlPanelAndChildrenSizes(new Point(0, (int)(ClientSize.Height * 0.82)), new Size(ClientSize.Width, controlPanel.Size.Height));
             setTextPanelSizes();
         }
 
         private void setTextPanelSizes()
         {
-            textPanel.Size = new Size((int)(ClientSize.Width * 0.4), (int)(ClientSize.Height * 0.75));
-            textPanel.Location = new Point((int)(ClientSize.Width - textPanel.Size.Width - ((int)(ClientSize.Width * 0.05))), textPanel.Location.Y);
+            textPanel.Size = new Size((int)(ClientSize.Width * 0.6), (int)(ClientSize.Height * 0.75));
+            textPanel.Location = new Point((int)(ClientSize.Width - textPanel.Size.Width - ((int)(ClientSize.Width * 0.02))), textPanel.Location.Y);
             lyricTextBox.Size = new Size(textPanel.Size.Width - 10, textPanel.Size.Height - 10);
             lyricTextBox.Location = new Point(4, 4);
             fontButton.Location = new Point(textPanel.Location.X, textPanel.Location.Y - fontButton.Size.Height - 4);
@@ -1786,9 +1780,9 @@ namespace Dads_Audio_App
             setListListBox.Size = new Size((int)(treePanel.Width * 0.35), treePanel.Size.Height - 7 - addSongsButton.Height - songSearchLabel.Height);
             setListSearchLabel.Location = new Point(treePanel.Location.X, treePanel.Location.Y + addSongsButton.Height);
             //Songs
-            songsListBox.Location = new Point(treePanel.Location.X + setListListBox.Width + 1, treePanel.Location.Y + addSongsButton.Height + songSearchLabel.Size.Height);
-            songsListBox.Size = new Size((int)(treePanel.Width * 0.65) - 9, treePanel.Size.Height - addSongsButton.Height - songSearchLabel.Height - 7);
-            songSearchLabel.Location = new Point(songsListBox.Location.X, treePanel.Location.Y + addSongsButton.Height);
+            songsListBox.Location = new Point(treePanel.Location.X + setListListBox.Width + 10, treePanel.Location.Y + addSongsButton.Height + songSearchLabel.Size.Height);
+            songsListBox.Size = new Size((int)(treePanel.Width * 0.60), treePanel.Size.Height - addSongsButton.Height - songSearchLabel.Height - 7);
+            songSearchLabel.Location = new Point(songsListBox.Location.X, treePanel.Location.Y + addSongsButton.Height - 4);
             //Buttons
             newSetListButton.Location = new Point(setListListBox.Location.X, treePanel.Location.Y);
             addSongsButton.Location = new Point(newSetListButton.Location.X + newSetListButton.Size.Width + 4, treePanel.Location.Y);
@@ -1856,6 +1850,15 @@ namespace Dads_Audio_App
         {
             scrollCoolDownBool = false;
             scrollCoolDown.Stop();
+        }
+
+        private void songsListBox_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void songsListBox_Leave(object sender, EventArgs e)
+        {
         }
     }
 }
