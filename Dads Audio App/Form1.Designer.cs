@@ -68,6 +68,9 @@
             textPanel = new Panel();
             saveScrollPos = new Button();
             scrollCoolDown = new System.Windows.Forms.Timer(components);
+            scrollContextStrip = new ContextMenuStrip(components);
+            deleteToolStripMenuItem3 = new ToolStripMenuItem();
+            showScrollPositionToolStripMenuItem = new ToolStripMenuItem();
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -75,6 +78,7 @@
             songsContextMenu.SuspendLayout();
             flagsContextStrip.SuspendLayout();
             textPanel.SuspendLayout();
+            scrollContextStrip.SuspendLayout();
             SuspendLayout();
             // 
             // playButton
@@ -309,7 +313,7 @@
             controlPanel.Controls.Add(audioBar);
             controlPanel.Location = new Point(0, 502);
             controlPanel.Name = "controlPanel";
-            controlPanel.Size = new Size(1176, 101);
+            controlPanel.Size = new Size(1176, 131);
             controlPanel.TabIndex = 15;
             controlPanel.MouseDoubleClick += controlPanel_DoubleClick;
             // 
@@ -467,6 +471,26 @@
             scrollCoolDown.Interval = 1000;
             scrollCoolDown.Tick += scrollCoolDown_Tick;
             // 
+            // scrollContextStrip
+            // 
+            scrollContextStrip.Items.AddRange(new ToolStripItem[] { showScrollPositionToolStripMenuItem, deleteToolStripMenuItem3 });
+            scrollContextStrip.Name = "scrollContextStrip";
+            scrollContextStrip.Size = new Size(182, 70);
+            // 
+            // deleteToolStripMenuItem3
+            // 
+            deleteToolStripMenuItem3.Name = "deleteToolStripMenuItem3";
+            deleteToolStripMenuItem3.Size = new Size(181, 22);
+            deleteToolStripMenuItem3.Text = "Delete";
+            deleteToolStripMenuItem3.Click += deleteToolStripMenuItem3_Click;
+            // 
+            // showScrollPositionToolStripMenuItem
+            // 
+            showScrollPositionToolStripMenuItem.Name = "showScrollPositionToolStripMenuItem";
+            showScrollPositionToolStripMenuItem.Size = new Size(181, 22);
+            showScrollPositionToolStripMenuItem.Text = "Show Scroll Position";
+            showScrollPositionToolStripMenuItem.Click += showScrollPositionToolStripMenuItem_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -498,6 +522,7 @@
             songsContextMenu.ResumeLayout(false);
             flagsContextStrip.ResumeLayout(false);
             textPanel.ResumeLayout(false);
+            scrollContextStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -543,5 +568,8 @@
         private System.Windows.Forms.Timer scrollCoolDown;
         private Label songsHeader;
         private Label setListHeader;
+        private ContextMenuStrip scrollContextStrip;
+        private ToolStripMenuItem deleteToolStripMenuItem3;
+        private ToolStripMenuItem showScrollPositionToolStripMenuItem;
     }
 }

@@ -11,14 +11,23 @@
 
   <ItemGroup>
     <None Remove="Flag.png" />
+    <None Remove="flagLineImage.png" />
     <None Remove="lineImage.png" />
+    <None Remove="mainLineImage.png" />
+    <None Remove="ScrollFlag.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Flag.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="lineImage.png">
+    <Content Include="flagLineImage.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="mainLineImage.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ScrollFlag.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

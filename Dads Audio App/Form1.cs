@@ -51,9 +51,10 @@ namespace Dads_Audio_App
         private string songLengthFormatted;
         private string folderDirectory;
         private Dictionary<string, string[]> CSFD = new(); //CurrentSongFlagDictionary
-        Bitmap image;
-        Bitmap lineImage;
-        Bitmap lineImageChangedColor;
+        Bitmap flagImage;
+        Bitmap mainLineImage;
+        Bitmap scrollFlagImage;
+        Bitmap flagLineImage;
         private Point mainLineLocation;
         private PictureBox mainLine;
         bool userDeletedRow = false;
@@ -63,7 +64,12 @@ namespace Dads_Audio_App
         private string previousSelectedNodeName;
         private bool coolDown;
         List<Control[]> flagControls = new List<Control[]>();
+        List<Control[]> flagScrollControls = new List<Control[]>();
         private int draggingIndexMoveBtn;
+        private int draggingIndexScrollBtn;
+        private bool draggingScrollBtn;
+        private int xoffsetScrollBtn;
+        private int yoffsetScrollBtn;
         private int flagsButtonToDeleteIndex;
         bool draggingMoveBtn;
         private bool draggingMainLineButton;
@@ -109,18 +115,26 @@ namespace Dads_Audio_App
         {
             InitializeComponent();
             this.WindowState = FormWindowState.Maximized; // Maximize the window
-            firstTimeStartUp();
-            string launch = AppDomain.CurrentDomain.BaseDirectory;
-            image = new Bitmap(launch + "\\Flag.png");
-            lineImage = new Bitmap(launch + "\\lineImage.png");
-            image.MakeTransparent(Color.White);
-            lineImage.MakeTransparent(Color.White);
+            createFolders();
+            loadImages();
             loadSetList2();
-            createLine();
+            createMainLine();
             editMode(false);
             draggingMoveBtn = false;
             setListHeader.AutoSize = false;
             songsHeader.AutoSize = false;
+        }
+
+        private void loadImages()
+        {
+            string launch = AppDomain.CurrentDomain.BaseDirectory;
+            flagImage = new Bitmap(launch + "\\Flag.png");
+            mainLineImage = new Bitmap(launch + "\\mainLineImage.png");
+            scrollFlagImage = new Bitmap(launch + "\\ScrollFlag.png");
+            flagLineImage = new Bitmap(launch + "\\flagLineImage.png");
+            flagImage.MakeTransparent(Color.White);
+            scrollFlagImage.MakeTransparent(Color.White);
+
         }
 
         private void ListOutputDevices() //Not needed
@@ -151,41 +165,14 @@ namespace Dads_Audio_App
                 flagButton.Enabled = toggle;
                 flagButton.Visible = toggle;
                 saveScrollPos.Visible = toggle;
-            }
-        }
 
-        private void ApplyImageTransparency(Image img, float transparency)
-        {
-            // Create a ColorMatrix with the desired alpha (transparency) value
-            ColorMatrix colorMatrix = new ColorMatrix
-            {
-                Matrix33 = transparency // Alpha channel (0.0 to 1.0)
-            };
-
-            // Create ImageAttributes and set the ColorMatrix
-            ImageAttributes imgAttributes = new ImageAttributes();
-            imgAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-
-            // Create a new Bitmap to hold the transparent image
-            Bitmap transparentBitmap = new Bitmap(img.Width, img.Height);
-
-            // Use Graphics to apply the ColorMatrix
-            using (Graphics g = Graphics.FromImage(transparentBitmap))
-            {
-                g.DrawImage(
-                    img,
-                    new Rectangle(0, 0, img.Width, img.Height), // Destination rectangle
-                    0, 0, img.Width, img.Height,                 // Source rectangle
-                    GraphicsUnit.Pixel,
-                    imgAttributes);                              // Apply the transparency
+                flagScrollControls.ForEach(controlArray => Array.ForEach(controlArray, control => control.Visible = toggle));
             }
 
-            // Set the PictureBox's image to the new transparent image
-            lineImage = transparentBitmap;
         }
 
 
-        private void createLine()
+        private void createMainLine()
         {
             int flagPicWidth = 16;
             int flagPicHeight = 15;
@@ -201,7 +188,7 @@ namespace Dads_Audio_App
             mainLineButton.FlatAppearance.MouseOverBackColor = Color.Transparent;
             mainLineButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
             mainLineButton.BackgroundImageLayout = ImageLayout.Zoom;
-            mainLineButton.BackgroundImage = image;
+            mainLineButton.BackgroundImage = flagImage;
             mainLineButton.Size = new Size(flagPicWidth, flagPicHeight);
             mainLineButtonLocation = mainLineButton.Location;
 
@@ -213,37 +200,18 @@ namespace Dads_Audio_App
             mainLineButton.Visible = false;
 
             PictureBox line = new PictureBox();
-            line.Image = lineImage;
+            line.Image = mainLineImage;
             line.Width = 2;
             line.Height = 110;
             line.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y - 25);
             line.SizeMode = PictureBoxSizeMode.Normal;
             this.Controls.Add(line);
             line.BringToFront();
-            ApplyImageTransparency(lineImage, 0.7f);
-            lineImageChangedColor = ChangeImageColorToBlue(lineImage);
             mainLineLocation = line.Location;
             mainLine = line;
             mainLineButton.BringToFront();
         }
-        private Bitmap ChangeImageColorToBlue(Bitmap originalImage)
-        {
-            Bitmap blueImage = new Bitmap(originalImage.Width, originalImage.Height);
 
-            for (int y = 0; y < originalImage.Height; y++)
-            {
-                for (int x = 0; x < originalImage.Width; x++)
-                {
-                    // Get the pixel color from the original image
-                    Color originalColor = originalImage.GetPixel(x, y);
-
-                    int blue = (originalColor.R + originalColor.G + originalColor.B) / 3; // Use the average brightness of the original pixel
-                    blueImage.SetPixel(x, y, Color.FromArgb(0, 0, blue)); // Set the new color as pure blue
-                }
-            }
-
-            return blueImage;
-        }
 
 
         private void playButton_Click(object sender, EventArgs e)
@@ -307,7 +275,7 @@ namespace Dads_Audio_App
         }
 
 
-        private void firstTimeStartUp() //creates folder to store song info
+        private void createFolders() //creates folder to store song info
         {
             try
             {
@@ -409,7 +377,7 @@ namespace Dads_Audio_App
 
                 currentBehindWave.Size = new Size(xLocation, currentBehindWave.Height);
                 mainLine.Location = new Point((int)(ClientSize.Width * 0.02) + xLocation, mainLine.Location.Y);
-                mainLineButton.Location = new Point(mainLineButtonLocation.X + mainLineButton.Size.Width/2 + xLocation, mainLineButton.Location.Y);
+                mainLineButton.Location = new Point(mainLineButtonLocation.X + mainLineButton.Size.Width / 2 + xLocation, mainLineButton.Location.Y);
             }
 
             currentTimeLabel.Text = mediaPlayer.CurrentTime.ToString(@"mm\:ss");
@@ -443,14 +411,19 @@ namespace Dads_Audio_App
                 deltaLabel.Text = "-";
                 deltaTimeLabel.Text = "-";
             }
-
-            int index = lyricScrollInfo.FindIndex(x => int.Parse(x[0]) <= audioBar.Value + 100 && int.Parse(x[0]) >= audioBar.Value - 100);
-            if (index != -1 && !scrollCoolDownBool)
-            {                
-                scrollCoolDownBool = true;
-                scrollCoolDown.Start();
-                lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[index][2]);
-                lyricTextBox.ScrollToCaret();
+            if (outputDevice != null)
+            {
+                if (outputDevice.PlaybackState == PlaybackState.Playing)
+                {
+                    int index = lyricScrollInfo.FindIndex(x => int.Parse(x[0]) <= audioBar.Value + 100 && int.Parse(x[0]) >= audioBar.Value - 100);
+                    if (index != -1 && !scrollCoolDownBool)
+                    {
+                        scrollCoolDownBool = true;
+                        scrollCoolDown.Start();
+                        lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[index][2]);
+                        lyricTextBox.ScrollToCaret();
+                    }
+                }
             }
         }
 
@@ -480,9 +453,9 @@ namespace Dads_Audio_App
         {
             if (selectedSong != null)
             {
-                flagCount++;
+                flagCount = allFlagsInfo.Count() + 1;
                 allFlagsInfo.Add(new string[] { audioBar.Value.ToString(), $"Flag {flagCount}" });
-                createFlagAt(audioBar.Value, $"Flag {flagCount}");
+                createFlagAt(audioBar.Value, $"Flag {flagCount}", false);
                 saveFileV2(currentSongNameNoExt);
             }
         }
@@ -576,7 +549,7 @@ namespace Dads_Audio_App
 
                     flagCount++;
                     allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
-                    createFlagAt(PBValue, $"Flag {flagCount}");
+                    createFlagAt(PBValue, $"Flag {flagCount}", false);
                     saveFileV2(currentSongNameNoExt);
                 }
             }
@@ -648,7 +621,7 @@ namespace Dads_Audio_App
             flagText.PreviewKeyDown += flagText_PreviewKeyDown;
 
             PictureBox line = new PictureBox();
-            line.Image = lineImageChangedColor;
+            line.Image = flagLineImage;
             line.Width = 1;
             line.Height = 90;
             line.Location = new Point(position, positionY);
@@ -663,7 +636,7 @@ namespace Dads_Audio_App
             moveBtn.FlatAppearance.MouseOverBackColor = Color.Transparent;
             moveBtn.FlatAppearance.MouseDownBackColor = Color.Transparent;
             moveBtn.BackgroundImageLayout = ImageLayout.Zoom;
-            moveBtn.BackgroundImage = image;
+            moveBtn.BackgroundImage = flagImage;
             moveBtn.Size = new Size(flagPicWidth, flagPicHeight);
 
             Control[] controls = new Control[3];
@@ -688,6 +661,158 @@ namespace Dads_Audio_App
             line.BringToFront();
             moveBtn.BringToFront();
 
+        }
+
+        private void createScrollFlag(int position, string label)
+        {
+            int flagPicWidth = 16;
+            int flagPicHeight = 15;
+            int positionX = position - flagPicWidth / 2;
+            int positionY = audioBar.Location.Y + currentInfrontWave.Size.Height;
+            //Text
+            TextBox flagText = new TextBox();
+            flagText.Text = label;
+            flagText.Font = new Font("Arial", 13, FontStyle.Regular);
+            flagText.BorderStyle = BorderStyle.None;
+
+
+            // Create a Graphics object to measure the string size
+            using (Graphics g = flagText.CreateGraphics())
+            {
+                SizeF stringSize = g.MeasureString(flagText.Text, flagText.Font);
+                int offset = 0;
+
+                if (stringSize.Width < 16)
+                {
+                    stringSize.Width = 0;
+                    offset = 16;
+                }
+                // Set the TextBox size based on the measured text size
+                flagText.Width = (int)stringSize.Width + offset;  // Adjust the padding as needed
+                flagText.Height = (int)stringSize.Height;
+            }
+            flagText.Location = new Point(positionX, positionY + flagPicHeight);
+            flagText.ReadOnly = true;
+
+            //flagText.TextChanged += FlagText_TextChanged;
+            //flagText.Enter += flagText_Enter;
+            //flagText.PreviewKeyDown += flagText_PreviewKeyDown;
+
+            PictureBox line = new PictureBox();
+            line.Image = flagLineImage;
+            line.Width = 1;
+            line.Height = 90;
+            line.Location = new Point(position, positionY - line.Height + flagPicHeight);
+            line.SizeMode = PictureBoxSizeMode.Normal;
+
+            Button moveBtn = new Button();
+            moveBtn.Text = "";
+            moveBtn.BackColor = Color.Transparent;
+            moveBtn.FlatStyle = FlatStyle.Flat;
+            moveBtn.Location = new Point(positionX, audioBar.Location.Y + currentInfrontWave.Size.Height);
+            moveBtn.FlatAppearance.BorderSize = 0;
+            moveBtn.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            moveBtn.FlatAppearance.MouseDownBackColor = Color.Transparent;
+            moveBtn.BackgroundImageLayout = ImageLayout.Zoom;
+            moveBtn.BackgroundImage = scrollFlagImage;
+            moveBtn.Size = new Size(flagPicWidth, flagPicHeight);
+
+            Control[] controls = new Control[3];
+
+            controls[0] = flagText;
+            controls[1] = line;
+            controls[2] = moveBtn;
+
+            flagScrollControls.Add(controls);
+
+            controlPanel.Controls.Add(flagText);
+            controlPanel.Controls.Add(line);
+            controlPanel.Controls.Add(moveBtn);
+
+
+            moveBtn.MouseDown += ScrollBtn_MouseDown;
+            moveBtn.MouseMove += ScrollBtn_MouseMove;
+            moveBtn.MouseUp += ScrollBtn_MouseUp;
+
+
+            flagText.BringToFront();
+            line.BringToFront();
+            moveBtn.BringToFront();
+
+        }
+
+        private void ScrollBtn_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (!draggingScrollBtn) { return; }
+            draggingScrollBtn = false;
+            int xLocation = flagScrollControls[draggingIndexScrollBtn][1].Location.X + flagScrollControls[draggingIndexScrollBtn][1].Width;
+            int PBValue = xLocationToPBValue(xLocation);
+            lyricScrollInfo[draggingIndexScrollBtn][0] = PBValue.ToString();
+            saveFileV2(currentSongNameNoExt);
+        }
+
+        private void ScrollBtn_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!draggingScrollBtn) return;
+
+            Button b = (Button)sender;
+            int Xmoved = e.Location.X - xoffsetScrollBtn;
+            int Ymoved = e.Location.Y - yoffsetScrollBtn;
+
+            if (Math.Abs(Xmoved) > 1) // Skip very small moves
+            {
+                if (flagScrollControls[draggingIndexScrollBtn][1].Location.X + Xmoved <= audioBar.Location.X || flagScrollControls[draggingIndexScrollBtn][1].Location.X + Xmoved >= audioBar.Location.X + audioBar.Width)
+                {
+                    Xmoved = 0;
+                }
+                //if(flagControls[draggingIndex][1].Location.Y + Ymoved >= currentBehindWave.Location.Y + currentBehindWave.Size.Height || flagControls[draggingIndex][1].Location.Y + Ymoved <= controlPanel.Location.Y + controlPanel.Size.Height)
+                {
+                    Ymoved = 0;
+                }
+                controlPanel.SuspendLayout();
+
+                // Update locations of all the controls in the group (Label, PictureBox, Button)
+                flagScrollControls[draggingIndexScrollBtn][0].Location = new Point(flagScrollControls[draggingIndexScrollBtn][0].Location.X + Xmoved, flagScrollControls[draggingIndexScrollBtn][0].Location.Y + Ymoved);
+                flagScrollControls[draggingIndexScrollBtn][1].Location = new Point(flagScrollControls[draggingIndexScrollBtn][1].Location.X + Xmoved, flagScrollControls[draggingIndexScrollBtn][1].Location.Y + Ymoved);
+                flagScrollControls[draggingIndexScrollBtn][2].Location = new Point(flagScrollControls[draggingIndexScrollBtn][2].Location.X + Xmoved, flagScrollControls[draggingIndexScrollBtn][2].Location.Y + Ymoved);
+
+                // Resume layout after update
+                controlPanel.ResumeLayout();
+
+                // Force immediate refresh of the panel to update display
+                controlPanel.Refresh();
+
+            }
+        }
+
+        private void ScrollBtn_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (editingCheckBox.Checked)
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    Button b;
+                    b = (Button)sender;
+
+                    draggingIndexScrollBtn = flagScrollControls.FindIndex(x => x[2] == b);
+                    draggingScrollBtn = true;
+                    xoffsetScrollBtn = e.X;
+                    yoffsetScrollBtn = e.Y;
+                }
+                else if (e.Button == MouseButtons.Right)
+                {
+                    Point mousePos = Control.MousePosition;
+                    scrollContextStrip.Show(mousePos);
+                    Button b = (Button)sender;
+                    draggingIndexScrollBtn = flagScrollControls.FindIndex(x => x[2] == b);
+                    draggingScrollBtn = false;
+                }
+
+            }
+            else
+            {
+                draggingScrollBtn = false;
+            }
         }
 
         private void flagText_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
@@ -890,7 +1015,7 @@ namespace Dads_Audio_App
         }
 
 
-        private void createFlagAt(int PBValue, string flagLabel)
+        private void createFlagAt(int PBValue, string flagLabel, bool isScrollFlag)
         {
             int PBLocX = audioBar.Location.X;
             int PBSizeX = audioBar.Size.Width;
@@ -899,8 +1024,14 @@ namespace Dads_Audio_App
             float proportion = (float)PBValue / PBmaxValue;
             int xLocation = PBLocX + (int)(proportion * PBSizeX);
 
-
-            createFlags(xLocation, flagLabel);
+            if (!isScrollFlag)
+            {
+                createFlags(xLocation, flagLabel);
+            }
+            else
+            {
+                createScrollFlag(xLocation, flagLabel);
+            }
         }
 
 
@@ -975,7 +1106,7 @@ namespace Dads_Audio_App
                     setListListBox.Items.Add(setList);
                     GlobalVariables.setLists.Add(setList.ToLower());
                 }
-            }            
+            }
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -1111,6 +1242,8 @@ namespace Dads_Audio_App
             allFlagsInfo.Clear();
             controlPanel.Controls.Clear();
             flagControls.Clear();
+            lyricScrollInfo.Clear();
+            flagScrollControls.Clear();
             string songNameNoExt = Path.GetFileNameWithoutExtension(songName);
 
             lyricTextBox.Enabled = true;
@@ -1167,11 +1300,24 @@ namespace Dads_Audio_App
             }
             flagCount = allFlagsInfo.Count();
             createAllFlagsV2();
+            createAllScrollFlags();
             timer1.Start();
 
             if (editingCheckBox.Checked)
             {
                 editMode(true);
+            }
+            else
+            {
+                editMode(false);
+            }
+        }
+
+        private void createAllScrollFlags()
+        {
+            foreach (var flag in lyricScrollInfo)
+            {
+                createFlagAt(int.Parse(flag[0]), flag[1], true);
             }
         }
 
@@ -1179,7 +1325,7 @@ namespace Dads_Audio_App
         {
             foreach (var flag in allFlagsInfo)
             {
-                createFlagAt(int.Parse(flag[0]), flag[1]);
+                createFlagAt(int.Parse(flag[0]), flag[1], false);
             }
 
         }
@@ -1254,9 +1400,7 @@ namespace Dads_Audio_App
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
             deleteSetList();
-
         }
 
         private void songsListBox_MouseDown(object sender, MouseEventArgs e)
@@ -1408,7 +1552,7 @@ namespace Dads_Audio_App
                 else if (e.KeyCode == Keys.Space)
                 {
                     if (songsListBox.SelectedItem != null)
-                    {                        
+                    {
                         int index = songsListBox.SelectedIndex;
                         string songToPlay = songsListBox.SelectedItem.ToString();
                         selectedSong = songToPlay;
@@ -1416,7 +1560,7 @@ namespace Dads_Audio_App
                         loadSongsForSearch(setListListBox.SelectedItem.ToString());
                         songSearchLabel.Text = "";
                         songSearchString = "";
-                        playSongV2(false, songToPlay);                        
+                        playSongV2(false, songToPlay);
                         fromSearch = true;
                         currentTimeLabel.Focus();
                     }
@@ -1688,7 +1832,7 @@ namespace Dads_Audio_App
 
                     flagCount++;
                     allFlagsInfo.Add(new string[] { PBValue.ToString(), $"Flag {flagCount}" });
-                    createFlagAt(PBValue, $"Flag {flagCount}");
+                    createFlagAt(PBValue, $"Flag {flagCount}", false);
                     saveFileV2(currentSongNameNoExt);
                 }
             }
@@ -1778,11 +1922,12 @@ namespace Dads_Audio_App
 
         private void setTextPanelSizes()
         {
-            textPanel.Size = new Size((int)(ClientSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height/2);
+            textPanel.Size = new Size((int)(ClientSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height / 2);
             textPanel.Location = new Point((int)(ClientSize.Width - textPanel.Size.Width - ((int)(ClientSize.Width * 0.02))), songsHeader.Location.Y + treePanel.Location.Y);
             lyricTextBox.Size = new Size(textPanel.Size.Width - 10, textPanel.Size.Height - 10);
             lyricTextBox.Location = new Point(4, 4);
             fontButton.Location = new Point(textPanel.Location.X, textPanel.Location.Y - fontButton.Size.Height - 4);
+            saveScrollPos.Location = new Point(textPanel.Location.X + fontButton.Size.Width + 4, fontButton.Location.Y);
         }
 
         private void setTreePanelAndChildrenSizes(Point treePanelLoc, Size treePanelSize)
@@ -1819,7 +1964,7 @@ namespace Dads_Audio_App
                 audioBar.Location = new Point((int)(ClientSize.Width * 0.02), audioBar.Location.Y);
                 mainLine.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y - 25);
                 mainLineButton.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y + 75);
-                currentTimeLabel.Location = new Point(audioBar.Location.X, controlPanelLocation.Y + controlPanelSize.Height + 30);
+                currentTimeLabel.Location = new Point(audioBar.Location.X, controlPanelLocation.Y + controlPanelSize.Height);
                 playButton.Location = new Point(audioBar.Location.X, controlPanelLocation.Y - 30);
                 flagButton.Location = new Point(playButton.Location.X + playButton.Size.Width + 7, playButton.Location.Y);
                 if (currentInfrontWave != null && currentInfrontWave != null)
@@ -1857,11 +2002,18 @@ namespace Dads_Audio_App
 
         private void saveScrollPos_Click(object sender, EventArgs e)
         {
-            if (currentSongNameNoExt != null && currentSongNameNoExt != "")
+            if (currentSongNameNoExt != null && currentSongNameNoExt != "" && lyricTextBox.Text.Length > 0)
             {
                 int caretIndex = lyricTextBox.SelectionStart;
-                lyricScrollInfo.Add(new string[] { audioBar.Value.ToString(), "Name", caretIndex.ToString() });
+                int count = lyricScrollInfo.Count + 1;
+                string label = "Scroll " + count;
+                lyricScrollInfo.Add(new string[] { audioBar.Value.ToString(), label, caretIndex.ToString() });
+                createFlagAt(audioBar.Value, label, true);
                 saveFileV2(currentSongNameNoExt);
+            }
+            if (lyricTextBox.Text.Length == 0)
+            {
+                MessageBox.Show("Cannot add position to scroll as text box is empty");
             }
         }
 
@@ -1880,5 +2032,30 @@ namespace Dads_Audio_App
         {
         }
 
+        private void deleteToolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            Control[] controlsToDelete = flagScrollControls[draggingIndexScrollBtn];
+            int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
+            lyricScrollInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
+            for (int i = 0; i <= 2; i++)
+            {
+                Control controlToDelete = controlsToDelete[i];
+
+                if (controlToDelete != null && controlToDelete.Parent != null)
+                {
+                    controlToDelete.Parent.Controls.Remove(controlToDelete);
+                    controlToDelete.Dispose();
+                }
+            }
+
+            flagScrollControls.RemoveAt(draggingIndexScrollBtn);
+            saveFileV2(currentSongNameNoExt);
+        }
+
+        private void showScrollPositionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[draggingIndexScrollBtn][2]);
+            lyricTextBox.ScrollToCaret();
+        }
     }
 }
