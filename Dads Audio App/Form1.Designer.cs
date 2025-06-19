@@ -39,12 +39,12 @@
             deltaLabel = new Label();
             deltaTimeLabel = new Label();
             treePanel = new Panel();
+            setListHeader = new Label();
+            songsHeader = new Label();
             setListSearchLabel = new Label();
             songSearchLabel = new Label();
             songsListBox = new ListBox();
-            setListHeader = new Label();
             setListListBox = new ListBox();
-            songsHeader = new Label();
             setlistDeleteButton = new Button();
             addSongsButton = new Button();
             newSetListButton = new Button();
@@ -66,11 +66,17 @@
             flagsContextStrip = new ContextMenuStrip(components);
             deleteToolStripMenuItem2 = new ToolStripMenuItem();
             textPanel = new Panel();
+            dummyButton = new Button();
             saveScrollPos = new Button();
             scrollCoolDown = new System.Windows.Forms.Timer(components);
             scrollContextStrip = new ContextMenuStrip(components);
-            deleteToolStripMenuItem3 = new ToolStripMenuItem();
             showScrollPositionToolStripMenuItem = new ToolStripMenuItem();
+            deleteToolStripMenuItem3 = new ToolStripMenuItem();
+            lyricsBoxContextMenu = new ContextMenuStrip(components);
+            toolStripMenuItem3 = new ToolStripMenuItem();
+            toolStripMenuItem2 = new ToolStripMenuItem();
+            toolStripMenuItem1 = new ToolStripMenuItem();
+            scrollBlinkTimer = new System.Windows.Forms.Timer(components);
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -79,6 +85,7 @@
             flagsContextStrip.SuspendLayout();
             textPanel.SuspendLayout();
             scrollContextStrip.SuspendLayout();
+            lyricsBoxContextMenu.SuspendLayout();
             SuspendLayout();
             // 
             // playButton
@@ -90,6 +97,7 @@
             playButton.Text = "Play";
             playButton.UseVisualStyleBackColor = true;
             playButton.Click += playButton_Click;
+            playButton.MouseUp += playButton_MouseUp;
             // 
             // selectMusicFileDialog
             // 
@@ -100,7 +108,7 @@
             // audioBar
             // 
             audioBar.ForeColor = SystemColors.MenuHighlight;
-            audioBar.Location = new Point(29, 36);
+            audioBar.Location = new Point(29, 45);
             audioBar.Name = "audioBar";
             audioBar.Size = new Size(1101, 23);
             audioBar.TabIndex = 4;
@@ -137,11 +145,13 @@
             lyricTextBox.Location = new Point(4, 4);
             lyricTextBox.Name = "lyricTextBox";
             lyricTextBox.ReadOnly = true;
+            lyricTextBox.ShowSelectionMargin = true;
             lyricTextBox.Size = new Size(444, 446);
             lyricTextBox.TabIndex = 8;
             lyricTextBox.Text = "";
             lyricTextBox.TextChanged += lyricTextBox_TextChanged;
             lyricTextBox.Leave += lyricTextBox_Leave;
+            lyricTextBox.MouseDown += lyricTextBox_MouseDown;
             // 
             // deltaLabel
             // 
@@ -169,12 +179,12 @@
             // 
             // treePanel
             // 
+            treePanel.Controls.Add(setListHeader);
+            treePanel.Controls.Add(songsHeader);
             treePanel.Controls.Add(setListSearchLabel);
             treePanel.Controls.Add(songSearchLabel);
             treePanel.Controls.Add(songsListBox);
-            treePanel.Controls.Add(setListHeader);
             treePanel.Controls.Add(setListListBox);
-            treePanel.Controls.Add(songsHeader);
             treePanel.Controls.Add(setlistDeleteButton);
             treePanel.Controls.Add(addSongsButton);
             treePanel.Controls.Add(newSetListButton);
@@ -182,6 +192,34 @@
             treePanel.Name = "treePanel";
             treePanel.Size = new Size(409, 469);
             treePanel.TabIndex = 14;
+            // 
+            // setListHeader
+            // 
+            setListHeader.AutoSize = true;
+            setListHeader.BorderStyle = BorderStyle.FixedSingle;
+            setListHeader.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
+            setListHeader.Location = new Point(269, 278);
+            setListHeader.Margin = new Padding(0);
+            setListHeader.Name = "setListHeader";
+            setListHeader.Padding = new Padding(5);
+            setListHeader.Size = new Size(120, 44);
+            setListHeader.TabIndex = 23;
+            setListHeader.Text = "Set-Lists";
+            setListHeader.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // songsHeader
+            // 
+            songsHeader.AutoSize = true;
+            songsHeader.BorderStyle = BorderStyle.FixedSingle;
+            songsHeader.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
+            songsHeader.Location = new Point(238, 199);
+            songsHeader.Margin = new Padding(0);
+            songsHeader.Name = "songsHeader";
+            songsHeader.Padding = new Padding(5);
+            songsHeader.Size = new Size(95, 44);
+            songsHeader.TabIndex = 22;
+            songsHeader.Text = "Songs";
+            songsHeader.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // setListSearchLabel
             // 
@@ -232,18 +270,6 @@
             songsListBox.MouseUp += songsListBox_MouseUp;
             songsListBox.PreviewKeyDown += songsListBox_PreviewKeyDown;
             // 
-            // setListHeader
-            // 
-            setListHeader.AutoSize = true;
-            setListHeader.BorderStyle = BorderStyle.FixedSingle;
-            setListHeader.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
-            setListHeader.Location = new Point(269, 278);
-            setListHeader.Name = "setListHeader";
-            setListHeader.Size = new Size(110, 34);
-            setListHeader.TabIndex = 23;
-            setListHeader.Text = "Set-Lists";
-            setListHeader.TextAlign = ContentAlignment.MiddleCenter;
-            // 
             // setListListBox
             // 
             setListListBox.AllowDrop = true;
@@ -264,18 +290,6 @@
             setListListBox.MouseMove += setListListBox_MouseMove;
             setListListBox.MouseUp += setlistListBox_MouseUp;
             setListListBox.PreviewKeyDown += setlistListBox_PreviewKeyDown;
-            // 
-            // songsHeader
-            // 
-            songsHeader.AutoSize = true;
-            songsHeader.BorderStyle = BorderStyle.FixedSingle;
-            songsHeader.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
-            songsHeader.Location = new Point(238, 199);
-            songsHeader.Name = "songsHeader";
-            songsHeader.Size = new Size(85, 34);
-            songsHeader.TabIndex = 22;
-            songsHeader.Text = "Songs";
-            songsHeader.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // setlistDeleteButton
             // 
@@ -313,7 +327,7 @@
             controlPanel.Controls.Add(audioBar);
             controlPanel.Location = new Point(0, 502);
             controlPanel.Name = "controlPanel";
-            controlPanel.Size = new Size(1176, 131);
+            controlPanel.Size = new Size(1176, 140);
             controlPanel.TabIndex = 15;
             controlPanel.MouseDoubleClick += controlPanel_DoubleClick;
             // 
@@ -370,6 +384,10 @@
             editingCheckBox.CheckedChanged += editingCheckBox_CheckedChanged;
             editingCheckBox.KeyDown += editingCheckBox_KeyDown;
             editingCheckBox.PreviewKeyDown += editingCheckBox_PreviewKeyDown;
+            // 
+            // fontDialog1
+            // 
+            fontDialog1.ShowColor = true;
             // 
             // fontButton
             // 
@@ -450,10 +468,20 @@
             textPanel.BackColor = SystemColors.ActiveCaption;
             textPanel.BorderStyle = BorderStyle.FixedSingle;
             textPanel.Controls.Add(lyricTextBox);
+            textPanel.Controls.Add(dummyButton);
             textPanel.Location = new Point(711, 33);
             textPanel.Name = "textPanel";
             textPanel.Size = new Size(454, 456);
             textPanel.TabIndex = 20;
+            // 
+            // dummyButton
+            // 
+            dummyButton.Location = new Point(196, 223);
+            dummyButton.Name = "dummyButton";
+            dummyButton.Size = new Size(75, 23);
+            dummyButton.TabIndex = 22;
+            dummyButton.Text = "button1";
+            dummyButton.UseVisualStyleBackColor = true;
             // 
             // saveScrollPos
             // 
@@ -461,7 +489,7 @@
             saveScrollPos.Name = "saveScrollPos";
             saveScrollPos.Size = new Size(75, 23);
             saveScrollPos.TabIndex = 21;
-            saveScrollPos.Text = "Save Scroll";
+            saveScrollPos.Text = "Add Scroll";
             saveScrollPos.UseVisualStyleBackColor = true;
             saveScrollPos.Visible = false;
             saveScrollPos.Click += saveScrollPos_Click;
@@ -475,7 +503,14 @@
             // 
             scrollContextStrip.Items.AddRange(new ToolStripItem[] { showScrollPositionToolStripMenuItem, deleteToolStripMenuItem3 });
             scrollContextStrip.Name = "scrollContextStrip";
-            scrollContextStrip.Size = new Size(182, 70);
+            scrollContextStrip.Size = new Size(182, 48);
+            // 
+            // showScrollPositionToolStripMenuItem
+            // 
+            showScrollPositionToolStripMenuItem.Name = "showScrollPositionToolStripMenuItem";
+            showScrollPositionToolStripMenuItem.Size = new Size(181, 22);
+            showScrollPositionToolStripMenuItem.Text = "Show Scroll Position";
+            showScrollPositionToolStripMenuItem.Click += showScrollPositionToolStripMenuItem_Click;
             // 
             // deleteToolStripMenuItem3
             // 
@@ -484,12 +519,37 @@
             deleteToolStripMenuItem3.Text = "Delete";
             deleteToolStripMenuItem3.Click += deleteToolStripMenuItem3_Click;
             // 
-            // showScrollPositionToolStripMenuItem
+            // lyricsBoxContextMenu
             // 
-            showScrollPositionToolStripMenuItem.Name = "showScrollPositionToolStripMenuItem";
-            showScrollPositionToolStripMenuItem.Size = new Size(181, 22);
-            showScrollPositionToolStripMenuItem.Text = "Show Scroll Position";
-            showScrollPositionToolStripMenuItem.Click += showScrollPositionToolStripMenuItem_Click;
+            lyricsBoxContextMenu.Items.AddRange(new ToolStripItem[] { toolStripMenuItem3, toolStripMenuItem2, toolStripMenuItem1 });
+            lyricsBoxContextMenu.Name = "lyricsBoxContextMenu";
+            lyricsBoxContextMenu.Size = new Size(129, 70);
+            // 
+            // toolStripMenuItem3
+            // 
+            toolStripMenuItem3.Name = "toolStripMenuItem3";
+            toolStripMenuItem3.Size = new Size(128, 22);
+            toolStripMenuItem3.Text = "Add Scroll";
+            toolStripMenuItem3.Click += toolStripMenuItem3_Click;
+            // 
+            // toolStripMenuItem2
+            // 
+            toolStripMenuItem2.Name = "toolStripMenuItem2";
+            toolStripMenuItem2.Size = new Size(128, 22);
+            toolStripMenuItem2.Text = "Font";
+            toolStripMenuItem2.Click += toolStripMenuItem2_Click;
+            // 
+            // toolStripMenuItem1
+            // 
+            toolStripMenuItem1.Name = "toolStripMenuItem1";
+            toolStripMenuItem1.Size = new Size(128, 22);
+            toolStripMenuItem1.Text = "Paste";
+            toolStripMenuItem1.Click += toolStripMenuItem1_Click;
+            // 
+            // scrollBlinkTimer
+            // 
+            scrollBlinkTimer.Interval = 1000;
+            scrollBlinkTimer.Tick += scrollBlinkTimer_Tick;
             // 
             // Form1
             // 
@@ -523,6 +583,7 @@
             flagsContextStrip.ResumeLayout(false);
             textPanel.ResumeLayout(false);
             scrollContextStrip.ResumeLayout(false);
+            lyricsBoxContextMenu.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -571,5 +632,11 @@
         private ContextMenuStrip scrollContextStrip;
         private ToolStripMenuItem deleteToolStripMenuItem3;
         private ToolStripMenuItem showScrollPositionToolStripMenuItem;
+        private Button dummyButton;
+        private ContextMenuStrip lyricsBoxContextMenu;
+        private ToolStripMenuItem toolStripMenuItem1;
+        private ToolStripMenuItem toolStripMenuItem2;
+        private ToolStripMenuItem toolStripMenuItem3;
+        private System.Windows.Forms.Timer scrollBlinkTimer;
     }
 }

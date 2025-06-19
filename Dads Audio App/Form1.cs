@@ -104,6 +104,8 @@ namespace Dads_Audio_App
         private bool fromSearch;
         private List<string[]> lyricScrollInfo = new List<string[]>();
         private bool scrollCoolDownBool;
+        private int highlightedScrollStart;
+        private int highlightedScrollLength;
 
         //Must add selecting audio and moving that file into songs folder
         //Questions
@@ -168,7 +170,7 @@ namespace Dads_Audio_App
 
                 flagScrollControls.ForEach(controlArray => Array.ForEach(controlArray, control => control.Visible = toggle));
             }
-
+            dummyButton.Focus();
         }
 
 
@@ -226,6 +228,7 @@ namespace Dads_Audio_App
                 {
                     outputDevice.Play();
                 }
+                currentTimeLabel.Focus();
                 timer1_Tick(this, EventArgs.Empty);
 
             }
@@ -596,29 +599,18 @@ namespace Dads_Audio_App
             TextBox flagText = new TextBox();
             flagText.Text = label;
             flagText.Font = new Font("Arial", 13, FontStyle.Regular);
-            flagText.BorderStyle = BorderStyle.None;
-
+            //flagText.BorderStyle = BorderStyle.None;
+            flagText.TextAlign = HorizontalAlignment.Center;
 
             // Create a Graphics object to measure the string size
-            using (Graphics g = flagText.CreateGraphics())
-            {
-                SizeF stringSize = g.MeasureString(flagText.Text, flagText.Font);
-                int offset = 0;
+            graphicsText(flagText);
 
-                if (stringSize.Width < 16)
-                {
-                    stringSize.Width = 0;
-                    offset = 16;
-                }
-                // Set the TextBox size based on the measured text size
-                flagText.Width = (int)stringSize.Width + offset;  // Adjust the padding as needed
-                flagText.Height = (int)stringSize.Height;
-            }
             flagText.Location = new Point(positionX, positionY - 1 * flagText.Size.Height);
-
+            
             flagText.TextChanged += FlagText_TextChanged;
             flagText.Enter += flagText_Enter;
             flagText.PreviewKeyDown += flagText_PreviewKeyDown;
+            flagText.MouseDoubleClick += FlagText_MouseDoubleClick;
 
             PictureBox line = new PictureBox();
             line.Image = flagLineImage;
@@ -663,6 +655,15 @@ namespace Dads_Audio_App
 
         }
 
+        private void FlagText_MouseDoubleClick(object? sender, MouseEventArgs e)
+        {
+            if(editingCheckBox.Checked)
+            {
+                TextBox flagTextBox = (TextBox)sender;
+                flagTextBox.SelectAll();
+            }
+        }
+
         private void createScrollFlag(int position, string label)
         {
             int flagPicWidth = 16;
@@ -677,20 +678,8 @@ namespace Dads_Audio_App
 
 
             // Create a Graphics object to measure the string size
-            using (Graphics g = flagText.CreateGraphics())
-            {
-                SizeF stringSize = g.MeasureString(flagText.Text, flagText.Font);
-                int offset = 0;
+            graphicsText(flagText);
 
-                if (stringSize.Width < 16)
-                {
-                    stringSize.Width = 0;
-                    offset = 16;
-                }
-                // Set the TextBox size based on the measured text size
-                flagText.Width = (int)stringSize.Width + offset;  // Adjust the padding as needed
-                flagText.Height = (int)stringSize.Height;
-            }
             flagText.Location = new Point(positionX, positionY + flagPicHeight);
             flagText.ReadOnly = true;
 
@@ -818,32 +807,19 @@ namespace Dads_Audio_App
         private void flagText_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
-            {
+            {              
                 allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
                 saveFileV2(currentSongNameNoExt);
                 flagTextCoolDown.Stop();
                 TextBox textBox = (TextBox)flagControls[selectedFlagTextIndex][0];
-
-                using (Graphics g = textBox.CreateGraphics())
-                {
-                    // Measure the size of the text
-                    SizeF stringSize = g.MeasureString(textBox.Text, textBox.Font);
-                    int offset = 0;
-                    if (stringSize.Width < 16)
-                    {
-                        stringSize.Width = 0;
-                        offset = 16;
-                    }
-
-                    textBox.Width = (int)stringSize.Width + offset;
-                }
+                textBox.TextAlign = HorizontalAlignment.Center;
+                graphicsText(textBox);
 
                 textBox.SelectionStart = 0; // Move the caret to the end of the text
                 textBox.ScrollToCaret();
-                deltaLabel.Focus();
+                dummyButton.Focus();
                 flagTextIsTyping = false;
             }
-
         }
 
         private void flagText_Enter(object sender, EventArgs e)
@@ -852,6 +828,12 @@ namespace Dads_Audio_App
             {
                 this.ActiveControl = null;
             }
+            else
+            {                
+                flagTextIsTyping = true;
+                flagTextCoolDown.Stop();
+                flagTextCoolDown.Start();
+            }
         }
 
         private void FlagText_TextChanged(object sender, EventArgs e)
@@ -859,8 +841,9 @@ namespace Dads_Audio_App
             TextBox textBox = (TextBox)sender;
 
             textBox.Size = new Size(150, textBox.Size.Height);
-
+            textBox.TextAlign = HorizontalAlignment.Left;
             flagTextIsTyping = true;
+            flagTextCoolDown.Stop();
             flagTextCoolDown.Start();
             selectedFlagTextIndex = flagControls.FindIndex(x => x[0].Text == textBox.Text);
         }
@@ -1115,14 +1098,14 @@ namespace Dads_Audio_App
             {
                 setListListBox.SelectedItem = selectedSetList;
                 songsListBox.SelectedItem = selectedSong;
-                deltaLabel.Focus();
+                dummyButton.Focus();
                 mediaPlayer.CurrentTime = new TimeSpan(0);
                 playButton.PerformClick();
                 coolDown = true;
                 coolDwon.Start();
             }
 
-            if (e.KeyCode == Keys.K && !coolDown && !songsListBox.Focused && !setListListBox.Focused)
+            if (e.KeyCode == Keys.K && !coolDown && !songsListBox.Focused && !lyricTextBox.Focused && !setListListBox.Focused && !flagTextIsTyping)
             {
                 playButton.PerformClick();
                 coolDown = true;
@@ -1171,12 +1154,15 @@ namespace Dads_Audio_App
         private void button1_Click_2(object sender, EventArgs e)
         {
             fontDialog1 = new FontDialog();
-            fontDialog1.Font = lyricTextBox.Font;
+            fontDialog1.ShowColor = true;
+            fontDialog1.Font = lyricTextBox.SelectionFont;
+            fontDialog1.Color = lyricTextBox.SelectionColor;
             if (fontDialog1.ShowDialog() == DialogResult.OK)
             {
                 if (lyricTextBox.SelectedText.Length > 0)
                 {
                     lyricTextBox.SelectionFont = fontDialog1.Font;
+                    lyricTextBox.SelectionColor = fontDialog1.Color;
                 }
                 else
                 {
@@ -1267,41 +1253,50 @@ namespace Dads_Audio_App
             {
                 outputDevice = new WaveOutEvent();
             }
-            mediaPlayer = new MediaFoundationReader(folderDirectory + "\\Songs" + "\\" + songName);
-            outputDevice.Init(mediaPlayer);
-            audioBar.Maximum = (int)mediaPlayer.TotalTime.TotalMilliseconds;
-
-            string songInfoFileDirect = folderDirectory + "\\SongInfo" + "\\" + songNameNoExt + ".txt";
-
-            FileInfo fileinfo = new FileInfo(songInfoFileDirect);
-            getWave(songName);
-
-            if (fileinfo.Exists)
+            if (File.Exists(folderDirectory + "\\Songs" + "\\" + songName))
             {
-                string info = System.IO.File.ReadAllText(songInfoFileDirect);
-                string[] infoSplit = info.Split('$');
-                string allFlags = infoSplit[0];
-                string allLyrics = infoSplit[1];
-                string[] lyricScroll = infoSplit[2].Split('^');
-                string[] flagBreakDown = allFlags.Split('^');
+                mediaPlayer = new MediaFoundationReader(folderDirectory + "\\Songs" + "\\" + songName);
+                mediaPlayer = new MediaFoundationReader(folderDirectory + "\\Songs" + "\\" + songName);
+                outputDevice.Init(mediaPlayer);
+                audioBar.Maximum = (int)mediaPlayer.TotalTime.TotalMilliseconds;
 
-                for (int i = 1; i < flagBreakDown.Count(); i++)
-                {
-                    string[] split = flagBreakDown[i].Split(';');
-                    allFlagsInfo.Add(new string[] { split[0], split[1] });
-                }
-                for (int i = 1; i < lyricScroll.Count(); i++)
-                {
-                    string[] split = lyricScroll[i].Split(';');
-                    lyricScrollInfo.Add(new string[] { split[0], split[1], split[2] }); //[0]-progressbarvalue [1]-name [2]-scrollvalue
-                }
+                string songInfoFileDirect = folderDirectory + "\\SongInfo" + "\\" + songNameNoExt + ".txt";
 
-                lyricTextBox.Rtf = allLyrics;
+                FileInfo fileinfo = new FileInfo(songInfoFileDirect);
+                getWave(songName);
+
+                if (fileinfo.Exists)
+                {
+                    string info = System.IO.File.ReadAllText(songInfoFileDirect);
+                    string[] infoSplit = info.Split('$');
+                    string allFlags = infoSplit[0];
+                    string allLyrics = infoSplit[1];
+                    string[] lyricScroll = infoSplit[2].Split('^');
+                    string[] flagBreakDown = allFlags.Split('^');
+
+                    for (int i = 1; i < flagBreakDown.Count(); i++)
+                    {
+                        string[] split = flagBreakDown[i].Split(';');
+                        allFlagsInfo.Add(new string[] { split[0], split[1] });
+                    }
+                    for (int i = 1; i < lyricScroll.Count(); i++)
+                    {
+                        string[] split = lyricScroll[i].Split(';');
+                        lyricScrollInfo.Add(new string[] { split[0], split[1], split[2] }); //[0]-progressbarvalue [1]-name [2]-scrollvalue
+                    }
+
+                    lyricTextBox.Rtf = allLyrics;
+                }
+                flagCount = allFlagsInfo.Count();
+                createAllFlagsV2();
+                createAllScrollFlags();
+                timer1.Start();
             }
-            flagCount = allFlagsInfo.Count();
-            createAllFlagsV2();
-            createAllScrollFlags();
-            timer1.Start();
+            else
+            {
+                MessageBox.Show("Media file no longer exsits");
+            }
+
 
             if (editingCheckBox.Checked)
             {
@@ -1347,8 +1342,7 @@ namespace Dads_Audio_App
         }
 
         private void flagTextCoolDown_Tick(object sender, EventArgs e)
-        {
-
+       {
             if (!flagTextIsTyping || this.ActiveControl != flagControls[selectedFlagTextIndex][0])
             {
                 allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
@@ -1356,24 +1350,32 @@ namespace Dads_Audio_App
                 flagTextCoolDown.Stop();
                 TextBox textBox = (TextBox)flagControls[selectedFlagTextIndex][0];
 
-                using (Graphics g = textBox.CreateGraphics())
-                {
-                    // Measure the size of the text
-                    SizeF stringSize = g.MeasureString(textBox.Text, textBox.Font);
-                    int offset = 0;
-                    if (stringSize.Width < 16)
-                    {
-                        stringSize.Width = 0;
-                        offset = 16;
-                    }
-
-                    textBox.Width = (int)stringSize.Width + offset;
-                }
+                graphicsText(textBox);
 
                 textBox.SelectionStart = 0; // Move the caret to the end of the text
                 textBox.ScrollToCaret();
+                textBox.TextAlign = HorizontalAlignment.Center;
+                dummyButton.Focus();
             }
             flagTextIsTyping = false;
+            
+        }
+
+        private void graphicsText(TextBox textBox)
+        {
+            using (Graphics g = textBox.CreateGraphics())
+            {
+                // Measure the size of the text
+                SizeF stringSize = g.MeasureString(textBox.Text, textBox.Font);
+                int offset = 0;
+                if (stringSize.Width < 16)
+                {
+                    stringSize.Width = 0;
+                    offset = 16;
+                }
+
+                textBox.Width = (int)stringSize.Width + offset;
+            }
         }
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
@@ -1666,8 +1668,18 @@ namespace Dads_Audio_App
                 if (!selectedFileNames.Any(fileName => songsListBox.Items.Contains(fileName)))
                 {
                     foreach (var item in selectedFiles.Select(x => Path.GetFileName(x)))
-                    {
-                        songsListBox.Items.Add(item);
+                    {                        
+                        if(songsListBox.SelectedIndex >= 0)
+                        {
+                            //If there is a song selected then add it above that one
+                            int index = songsListBox.SelectedIndex;
+                            songsListBox.Items.Insert(index, item);
+                        }
+                        else
+                        {
+                            //If none selected add to bottom of the list
+                            songsListBox.Items.Add(item);
+                        }
                     }
                     foreach (var item in dialog.FileNames)
                     {
@@ -1678,6 +1690,7 @@ namespace Dads_Audio_App
                             File.Move(songDirect, correctDirect);
                         }
                     }
+                    songsListBox.SelectedItem = Path.GetFileName(selectedFiles[0]);
                     saveSetList2(setListListBox.SelectedItem.ToString());
                 }
                 else
@@ -1698,7 +1711,7 @@ namespace Dads_Audio_App
                             string correctDirect = folderDirectory + "\\Songs" + "\\" + Path.GetFileName(item);
                             if (songDirect != correctDirect)
                             {
-                                File.Move(songDirect, correctDirect);
+                                File.Copy(songDirect, correctDirect);
                             }
                         }
                         saveSetList2(setListListBox.SelectedItem.ToString());
@@ -1706,7 +1719,8 @@ namespace Dads_Audio_App
 
                     MessageBox.Show($"Did not add the following songs as they already exist in this setlist:\n\n-{string.Join("\n-", didNotAddList.Select(x => Path.GetFileName(x)))}", "Files not added");
 
-
+                    
+                    songsListBox.SelectedItem = Path.GetFileName(didNotAddList[0]);
                 }
 
             }
@@ -2005,8 +2019,29 @@ namespace Dads_Audio_App
             if (currentSongNameNoExt != null && currentSongNameNoExt != "" && lyricTextBox.Text.Length > 0)
             {
                 int caretIndex = lyricTextBox.SelectionStart;
+
                 int count = lyricScrollInfo.Count + 1;
                 string label = "Scroll " + count;
+
+                //Start of Adding in scroll and formating
+                int lineIndex = lyricTextBox.GetLineFromCharIndex(lyricTextBox.SelectionStart);
+                int lineStart = lyricTextBox.GetFirstCharIndexFromLine(lineIndex);
+                string lineText = lyricTextBox.Lines[lineIndex];
+                int lineLength = lineText.Length;
+                lyricTextBox.SelectionStart = lineStart;
+                lyricTextBox.SelectionLength = lineLength;
+                var oldFont = lyricTextBox.SelectionFont;
+                var oldColor = lyricTextBox.SelectionColor;
+                lyricTextBox.SelectedText = lineText + " <--Scroll " + count + " -->";
+                lyricTextBox.SelectionFont = oldFont;
+                lyricTextBox.SelectionColor = oldColor;
+                //highlightedScrollStart = lyricTextBox.GetFirstCharIndexFromLine(line);
+                //highlightedScrollLength = lyricTextBox.Lines[line].Length;
+                //lyricTextBox.Select(highlightedScrollStart, highlightedScrollLength);
+                //lyricTextBox.SelectionBackColor = Color.LightBlue;
+
+                //End of scroll and formating
+                //
                 lyricScrollInfo.Add(new string[] { audioBar.Value.ToString(), label, caretIndex.ToString() });
                 createFlagAt(audioBar.Value, label, true);
                 saveFileV2(currentSongNameNoExt);
@@ -2034,6 +2069,24 @@ namespace Dads_Audio_App
 
         private void deleteToolStripMenuItem3_Click(object sender, EventArgs e)
         {
+            if(sender != null)
+            {
+                lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[draggingIndexScrollBtn][2]);
+                int lineIndex = lyricTextBox.GetLineFromCharIndex(lyricTextBox.SelectionStart);
+                int lineStart = lyricTextBox.GetFirstCharIndexFromLine(lineIndex);
+                string lineText = lyricTextBox.Lines[lineIndex];
+                int lineLength = lineText.Length;
+                lyricTextBox.SelectionStart = lineStart;
+                lyricTextBox.SelectionLength = lineLength;
+                var oldFont = lyricTextBox.SelectionFont;
+                var oldColor = lyricTextBox.SelectionColor;
+
+                string[] split = lineText.Split(" <--");
+
+                lyricTextBox.SelectedText = split[0];
+                lyricTextBox.SelectionFont = oldFont;
+                lyricTextBox.SelectionColor = oldColor;
+            }
             Control[] controlsToDelete = flagScrollControls[draggingIndexScrollBtn];
             int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
             lyricScrollInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
@@ -2056,6 +2109,57 @@ namespace Dads_Audio_App
         {
             lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[draggingIndexScrollBtn][2]);
             lyricTextBox.ScrollToCaret();
+            int caretIndex = lyricTextBox.SelectionStart;
+            int line = lyricTextBox.GetLineFromCharIndex(caretIndex);
+            try
+            {
+                highlightedScrollStart = lyricTextBox.GetFirstCharIndexFromLine(line);
+                highlightedScrollLength = lyricTextBox.Lines[line].Length;
+                lyricTextBox.Select(highlightedScrollStart, highlightedScrollLength);
+                lyricTextBox.SelectionBackColor = Color.LightBlue;
+                scrollBlinkTimer.Start();
+            }
+            catch
+            {
+                deleteToolStripMenuItem3_Click(null, EventArgs.Empty);
+                MessageBox.Show("Scroll text has been deleted. Deleting scroll.");
+            }
+        }
+
+        private void playButton_MouseUp(object sender, MouseEventArgs e)
+        {
+
+        }
+
+        private void lyricTextBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right && editingCheckBox.Checked)
+            {
+                Point mousePos = Control.MousePosition;
+                lyricsBoxContextMenu.Show(mousePos);
+            }
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            SendKeys.Send("^v");
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            fontButton.PerformClick();
+        }
+
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            saveScrollPos.PerformClick();
+        }
+
+        private void scrollBlinkTimer_Tick(object sender, EventArgs e)
+        {
+            lyricTextBox.Select(highlightedScrollStart, highlightedScrollLength);
+            lyricTextBox.SelectionBackColor = Color.White;
+            scrollBlinkTimer.Stop();
         }
     }
 }
