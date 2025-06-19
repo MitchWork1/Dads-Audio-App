@@ -1685,10 +1685,15 @@ namespace Dads_Audio_App
                     {
                         string songDirect = Path.GetFullPath(item);
                         string correctDirect = folderDirectory + "\\Songs" + "\\" + Path.GetFileName(item);
-                        if (songDirect != correctDirect)
+                        if (!File.Exists(correctDirect))
                         {
-                            File.Move(songDirect, correctDirect);
+                            File.Copy(songDirect, correctDirect, false);
                         }
+                        //Change in final version
+                        //if (songDirect != correctDirect)
+                        //{
+                        //    File.Move(songDirect, correctDirect);
+                        //}
                     }
                     songsListBox.SelectedItem = Path.GetFileName(selectedFiles[0]);
                     saveSetList2(setListListBox.SelectedItem.ToString());
