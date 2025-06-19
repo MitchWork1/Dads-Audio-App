@@ -94,6 +94,7 @@
             playButton.Name = "playButton";
             playButton.Size = new Size(75, 23);
             playButton.TabIndex = 0;
+            playButton.TabStop = false;
             playButton.Text = "Play";
             playButton.UseVisualStyleBackColor = true;
             playButton.Click += playButton_Click;
@@ -148,10 +149,14 @@
             lyricTextBox.ShowSelectionMargin = true;
             lyricTextBox.Size = new Size(444, 446);
             lyricTextBox.TabIndex = 8;
+            lyricTextBox.TabStop = false;
             lyricTextBox.Text = "";
             lyricTextBox.TextChanged += lyricTextBox_TextChanged;
+            lyricTextBox.KeyDown += lyricTextBox_KeyDown;
             lyricTextBox.Leave += lyricTextBox_Leave;
             lyricTextBox.MouseDown += lyricTextBox_MouseDown;
+            lyricTextBox.MouseEnter += lyricTextBox_MouseEnter;
+            lyricTextBox.PreviewKeyDown += lyricTextBox_PreviewKeyDown;
             // 
             // deltaLabel
             // 
@@ -266,6 +271,7 @@
             songsListBox.KeyDown += songsListBox_KeyDown;
             songsListBox.Leave += songsListBox_Leave;
             songsListBox.MouseDown += songsListBox_MouseDown;
+            songsListBox.MouseHover += songsListBox_MouseHover;
             songsListBox.MouseMove += songsListBox_MouseMove;
             songsListBox.MouseUp += songsListBox_MouseUp;
             songsListBox.PreviewKeyDown += songsListBox_PreviewKeyDown;
@@ -285,6 +291,7 @@
             setListListBox.DragDrop += setlistListBox_DragDrop;
             setListListBox.DragEnter += setListListBox_DragEnter;
             setListListBox.DragOver += setListListBox_DragOver;
+            setListListBox.KeyDown += setListListBox_KeyDown;
             setListListBox.MouseDown += setlistListBox_MouseDown;
             setListListBox.MouseHover += setListListBox_MouseHover;
             setListListBox.MouseMove += setListListBox_MouseMove;
@@ -379,6 +386,7 @@
             editingCheckBox.Name = "editingCheckBox";
             editingCheckBox.Size = new Size(101, 19);
             editingCheckBox.TabIndex = 17;
+            editingCheckBox.TabStop = false;
             editingCheckBox.Text = "Enable Editing";
             editingCheckBox.UseVisualStyleBackColor = true;
             editingCheckBox.CheckedChanged += editingCheckBox_CheckedChanged;

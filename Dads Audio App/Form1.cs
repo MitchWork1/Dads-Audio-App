@@ -125,6 +125,8 @@ namespace Dads_Audio_App
             draggingMoveBtn = false;
             setListHeader.AutoSize = false;
             songsHeader.AutoSize = false;
+            songSearchLabel.Text = "";
+            setListSearchLabel.Text = "";
         }
 
         private void loadImages()
@@ -228,7 +230,7 @@ namespace Dads_Audio_App
                 {
                     outputDevice.Play();
                 }
-                currentTimeLabel.Focus();
+                dummyButton.Focus();
                 timer1_Tick(this, EventArgs.Empty);
 
             }
@@ -606,11 +608,13 @@ namespace Dads_Audio_App
             graphicsText(flagText);
 
             flagText.Location = new Point(positionX, positionY - 1 * flagText.Size.Height);
-            
+
             flagText.TextChanged += FlagText_TextChanged;
             flagText.Enter += flagText_Enter;
             flagText.PreviewKeyDown += flagText_PreviewKeyDown;
             flagText.MouseDoubleClick += FlagText_MouseDoubleClick;
+            flagText.MouseDown += FlagText_MouseDown;
+            flagText.ContextMenuStrip = new ContextMenuStrip();
 
             PictureBox line = new PictureBox();
             line.Image = flagLineImage;
@@ -655,9 +659,21 @@ namespace Dads_Audio_App
 
         }
 
+        private void FlagText_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right && editingCheckBox.Checked)
+            {
+                flagsContextStrip.Show(Cursor.Position);
+                TextBox textBox = sender as TextBox;
+                Control[] group = flagControls.FirstOrDefault(group => group[0] == textBox);
+                Button b = (Button)group[2];
+                flagsButtonToDeleteIndex = flagControls.FindIndex(x => x[2] == b);
+            }
+        }
+
         private void FlagText_MouseDoubleClick(object? sender, MouseEventArgs e)
         {
-            if(editingCheckBox.Checked)
+            if (editingCheckBox.Checked)
             {
                 TextBox flagTextBox = (TextBox)sender;
                 flagTextBox.SelectAll();
@@ -682,6 +698,8 @@ namespace Dads_Audio_App
 
             flagText.Location = new Point(positionX, positionY + flagPicHeight);
             flagText.ReadOnly = true;
+
+            flagText.ContextMenuStrip = new ContextMenuStrip();
 
             //flagText.TextChanged += FlagText_TextChanged;
             //flagText.Enter += flagText_Enter;
@@ -807,7 +825,7 @@ namespace Dads_Audio_App
         private void flagText_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
-            {              
+            {
                 allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
                 saveFileV2(currentSongNameNoExt);
                 flagTextCoolDown.Stop();
@@ -829,7 +847,7 @@ namespace Dads_Audio_App
                 this.ActiveControl = null;
             }
             else
-            {                
+            {
                 flagTextIsTyping = true;
                 flagTextCoolDown.Stop();
                 flagTextCoolDown.Start();
@@ -1094,7 +1112,7 @@ namespace Dads_Audio_App
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && !flagTextIsTyping && !songsListBox.Focused && !setListListBox.Focused)
+            if (e.KeyCode == Keys.Space && !coolDown && mediaPlayer != null && !lyricTextBox.Focused && !flagTextIsTyping/* && !songsListBox.Focused && !setListListBox.Focused*/)
             {
                 setListListBox.SelectedItem = selectedSetList;
                 songsListBox.SelectedItem = selectedSong;
@@ -1103,6 +1121,7 @@ namespace Dads_Audio_App
                 playButton.PerformClick();
                 coolDown = true;
                 coolDwon.Start();
+                songsListBox.Focus();
             }
 
             if (e.KeyCode == Keys.K && !coolDown && !songsListBox.Focused && !lyricTextBox.Focused && !setListListBox.Focused && !flagTextIsTyping)
@@ -1111,6 +1130,49 @@ namespace Dads_Audio_App
                 coolDown = true;
                 coolDwon.Start();
             }
+
+            if (!editingCheckBox.Checked)
+            {
+                if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+                {
+                    if (!setListListBox.Focused)
+                    {
+                        songsListBox.Focus();
+                    }
+                    else
+                    {
+                        setListListBox.Focus();
+                    }
+
+                }
+                if (e.KeyCode == Keys.Left)
+                {
+                    if (!setListListBox.Focused)
+                    {
+                        songsListBox.ClearSelected();
+                        setListListBox.Focus();
+                    }
+                }
+                else if (e.KeyCode == Keys.Right)
+                {
+                    if (setListListBox.Focused)
+                    {
+                        string selectedItem = setListListBox.SelectedItem.ToString();
+                        loadSongs(selectedItem);
+                        selectedSetList = selectedItem;
+                        selectedSetListIndex = setListListBox.SelectedIndex;
+                        selectedSongLast = false;
+                        songsListBox.Focus();
+                    }
+                    if (!songsListBox.Focused && !songsListBox.Focused)
+                    {                        
+                        songsListBox.Focus();
+                    }
+                    
+                }
+            }
+
+
         }
 
         private void coolDwon_Tick(object sender, EventArgs e)
@@ -1342,7 +1404,7 @@ namespace Dads_Audio_App
         }
 
         private void flagTextCoolDown_Tick(object sender, EventArgs e)
-       {
+        {
             if (!flagTextIsTyping || this.ActiveControl != flagControls[selectedFlagTextIndex][0])
             {
                 allFlagsInfo[selectedFlagTextIndex][1] = flagControls[selectedFlagTextIndex][0].Text;
@@ -1358,7 +1420,7 @@ namespace Dads_Audio_App
                 dummyButton.Focus();
             }
             flagTextIsTyping = false;
-            
+
         }
 
         private void graphicsText(TextBox textBox)
@@ -1471,7 +1533,7 @@ namespace Dads_Audio_App
                     setListSearchString += e.KeyCode.ToString().ToLower();
                     setListSearchLabel.Visible = true;
                 }
-                else if (e.KeyCode == Keys.Space)
+                else if (e.KeyCode == Keys.Enter)
                 {
                     if (setListListBox.SelectedItem != null)
                     {
@@ -1551,7 +1613,7 @@ namespace Dads_Audio_App
                     songSearchString += e.KeyCode.ToString().ToLower();
                     songSearchLabel.Visible = true;
                 }
-                else if (e.KeyCode == Keys.Space)
+                else if (e.KeyCode == Keys.Enter)
                 {
                     if (songsListBox.SelectedItem != null)
                     {
@@ -1564,7 +1626,8 @@ namespace Dads_Audio_App
                         songSearchString = "";
                         playSongV2(false, songToPlay);
                         fromSearch = true;
-                        currentTimeLabel.Focus();
+                        dummyButton.Focus();
+                        songsListBox.Focus();
                     }
                 }
                 if (songSearchString.Length > 0)
@@ -1668,8 +1731,8 @@ namespace Dads_Audio_App
                 if (!selectedFileNames.Any(fileName => songsListBox.Items.Contains(fileName)))
                 {
                     foreach (var item in selectedFiles.Select(x => Path.GetFileName(x)))
-                    {                        
-                        if(songsListBox.SelectedIndex >= 0)
+                    {
+                        if (songsListBox.SelectedIndex >= 0)
                         {
                             //If there is a song selected then add it above that one
                             int index = songsListBox.SelectedIndex;
@@ -1724,7 +1787,7 @@ namespace Dads_Audio_App
 
                     MessageBox.Show($"Did not add the following songs as they already exist in this setlist:\n\n-{string.Join("\n-", didNotAddList.Select(x => Path.GetFileName(x)))}", "Files not added");
 
-                    
+
                     songsListBox.SelectedItem = Path.GetFileName(didNotAddList[0]);
                 }
 
@@ -1751,7 +1814,7 @@ namespace Dads_Audio_App
                         selectedSong = selectedItem;
                         playSongV2(false, selectedItem);
                         selectedSongLast = true;
-                        currentTimeLabel.Focus();
+                        songsListBox.Focus();
                     }
                     else if (e.Button == MouseButtons.Right && editingCheckBox.Checked)
                     {
@@ -1898,7 +1961,11 @@ namespace Dads_Audio_App
 
         private void songsListBox_KeyDown(object sender, KeyEventArgs e)
         {
-
+            if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
         }
 
         private void flagsContextStrip_Opening(object sender, CancelEventArgs e)
@@ -1934,7 +2001,7 @@ namespace Dads_Audio_App
 
         private void setControlSizes()
         {
-            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.01), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.35), (int)(ClientSize.Height * 0.78)));
+            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.01), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.35), (int)(ClientSize.Height * 0.75)));
             setControlPanelAndChildrenSizes(new Point(0, (int)(ClientSize.Height * 0.82)), new Size(ClientSize.Width, controlPanel.Size.Height));
             setTextPanelSizes();
         }
@@ -2074,7 +2141,7 @@ namespace Dads_Audio_App
 
         private void deleteToolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            if(sender != null)
+            if (sender != null)
             {
                 lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[draggingIndexScrollBtn][2]);
                 int lineIndex = lyricTextBox.GetLineFromCharIndex(lyricTextBox.SelectionStart);
@@ -2165,6 +2232,41 @@ namespace Dads_Audio_App
             lyricTextBox.Select(highlightedScrollStart, highlightedScrollLength);
             lyricTextBox.SelectionBackColor = Color.White;
             scrollBlinkTimer.Stop();
+        }
+
+        private void songsListBox_MouseHover(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lyricTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!editingCheckBox.Checked)
+            {
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void lyricTextBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.Down || e.KeyCode == Keys.Up)
+            {
+                e.IsInputKey = true;
+            }
+        }
+
+        private void lyricTextBox_MouseEnter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void setListListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
+            {
+                e.Handled = true;          
+                e.SuppressKeyPress = true;
+            }
         }
     }
 }
