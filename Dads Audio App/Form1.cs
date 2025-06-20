@@ -1986,8 +1986,8 @@ namespace Dads_Audio_App
             Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
             int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
             int beforeDeleteCount = allFlagsInfo.Count();
-            allFlagsInfo.RemoveAll(x => x[0] == PBValue.ToString() && x[1] == controlsToDelete[0].Text);
-            if(beforeDeleteCount == allFlagsInfo.Count())
+            allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
+            if (beforeDeleteCount == allFlagsInfo.Count())
             {
                 MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0]}"); 
             }
