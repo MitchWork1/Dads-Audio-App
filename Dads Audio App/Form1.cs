@@ -1400,7 +1400,15 @@ namespace Dads_Audio_App
                 lyricScroll += "^" + scroll[0] + ";" + scroll[1] + ";" + scroll[2];
             }
             string text = flagText + "$" + lyricTextBox.Rtf + "$" + lyricScroll;
-            System.IO.File.WriteAllText(folderDirectory + "\\SongInfo" + "\\" + songName + ".txt", text);
+            try
+            {
+                System.IO.File.WriteAllText(folderDirectory + "\\SongInfo" + "\\" + songName + ".txt", text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Save failed: " + ex.Message);
+            }
+
         }
 
         private void flagTextCoolDown_Tick(object sender, EventArgs e)
@@ -1803,10 +1811,6 @@ namespace Dads_Audio_App
 
         private void songsListBox_MouseUp(object sender, MouseEventArgs e)
         {
-            if(setListListBox.SelectedItem != null && songsListBox.SelectedItem != null)
-            {
-                saveFileV2(songsListBox.SelectedItem.ToString());
-            }
             if (setListListBox.SelectedItem != null)
             {
                 int index = songsListBox.IndexFromPoint(e.Location);
@@ -1980,7 +1984,7 @@ namespace Dads_Audio_App
         private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
         {
             Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
-            int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
+            int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);            
             allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
             for (int i = 0; i <= 2; i++)
             {
@@ -1992,7 +1996,6 @@ namespace Dads_Audio_App
                     controlToDelete.Dispose();
                 }
             }
-
             flagControls.RemoveAt(flagsButtonToDeleteIndex);
             saveFileV2(currentSongNameNoExt);
 
