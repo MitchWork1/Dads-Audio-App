@@ -385,7 +385,7 @@ namespace Dads_Audio_App
                 mainLineButton.Location = new Point(mainLineButtonLocation.X + mainLineButton.Size.Width / 2 + xLocation, mainLineButton.Location.Y);
             }
 
-            currentTimeLabel.Text = mediaPlayer.CurrentTime.ToString(@"mm\:ss");
+            currentTimeLabel.Text = mediaPlayer.CurrentTime.ToString(@"mm\:ss") + " - " + mediaPlayer.TotalTime.ToString(@"mm\:ss");
 
             if (CSFD.Count > 0 && (nextFlagName == null || audioBar.Value > nextFlagValue))
             {
@@ -458,10 +458,11 @@ namespace Dads_Audio_App
         {
             if (selectedSong != null)
             {
-                flagCount = allFlagsInfo.Count() + 1;
+                flagCount++;                
                 allFlagsInfo.Add(new string[] { audioBar.Value.ToString(), $"Flag {flagCount}" });
                 createFlagAt(audioBar.Value, $"Flag {flagCount}", false);
                 saveFileV2(currentSongNameNoExt);
+                
             }
         }
 
@@ -565,10 +566,13 @@ namespace Dads_Audio_App
             int PBLocX = audioBar.Location.X;
             int PBSizeX = audioBar.Size.Width;
             int PBmaxValue = audioBar.Maximum;
-
             int relativeX = xLoc - PBLocX;
             float proportion = (float)relativeX / PBSizeX;
             int PBValue = (int)(proportion * PBmaxValue);
+            if(PBValue < 300)
+            {
+                PBValue = 0;
+            }
             return PBValue;
         }
 
@@ -1989,7 +1993,7 @@ namespace Dads_Audio_App
             allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
             if (beforeDeleteCount == allFlagsInfo.Count())
             {
-                MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0]}"); 
+                MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0].Text}"); 
             }
             for (int i = 0; i <= 2; i++)
             {
