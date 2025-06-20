@@ -1803,6 +1803,10 @@ namespace Dads_Audio_App
 
         private void songsListBox_MouseUp(object sender, MouseEventArgs e)
         {
+            if(setListListBox.SelectedItem != null && songsListBox.SelectedItem != null)
+            {
+                saveFileV2(songsListBox.SelectedItem.ToString());
+            }
             if (setListListBox.SelectedItem != null)
             {
                 int index = songsListBox.IndexFromPoint(e.Location);
@@ -2002,7 +2006,7 @@ namespace Dads_Audio_App
         private void setControlSizes()
         {
             setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.01), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.35), (int)(ClientSize.Height * 0.75)));
-            setControlPanelAndChildrenSizes(new Point(0, (int)(ClientSize.Height * 0.82)), new Size(ClientSize.Width, controlPanel.Size.Height));
+            setControlPanelAndChildrenSizes(new Point(0, (int)(ClientSize.Height * 0.80)), new Size(ClientSize.Width, controlPanel.Size.Height));
             setTextPanelSizes();
         }
 
