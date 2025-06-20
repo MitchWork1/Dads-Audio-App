@@ -1984,8 +1984,13 @@ namespace Dads_Audio_App
         private void deleteToolStripMenuItem2_Click(object sender, EventArgs e)
         {
             Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
-            int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);            
-            allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
+            int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
+            int beforeDeleteCount = allFlagsInfo.Count();
+            allFlagsInfo.RemoveAll(x => x[0] == PBValue.ToString() && x[1] == controlsToDelete[0].Text);
+            if(beforeDeleteCount == allFlagsInfo.Count())
+            {
+                MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0]}"); 
+            }
             for (int i = 0; i <= 2; i++)
             {
                 Control controlToDelete = controlsToDelete[i];
