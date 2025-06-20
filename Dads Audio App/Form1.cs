@@ -458,11 +458,11 @@ namespace Dads_Audio_App
         {
             if (selectedSong != null)
             {
-                flagCount++;                
+                flagCount++;
                 allFlagsInfo.Add(new string[] { audioBar.Value.ToString(), $"Flag {flagCount}" });
                 createFlagAt(audioBar.Value, $"Flag {flagCount}", false);
                 saveFileV2(currentSongNameNoExt);
-                
+
             }
         }
 
@@ -569,7 +569,7 @@ namespace Dads_Audio_App
             int relativeX = xLoc - PBLocX;
             float proportion = (float)relativeX / PBSizeX;
             int PBValue = (int)(proportion * PBmaxValue);
-            if(PBValue < 300)
+            if (PBValue < 300)
             {
                 PBValue = 0;
             }
@@ -1050,7 +1050,7 @@ namespace Dads_Audio_App
             addSetList();
         }
 
-        private void addSetList()
+        private string addSetList()
         {
             GlobalVariables.stringResult = null;
             UserInputForm userInputForm = new UserInputForm();
@@ -1065,7 +1065,13 @@ namespace Dads_Audio_App
                 songsListBox.Items.Clear();
                 saveSetList2(result);
                 setListList.Add(result);
+                return result;
             }
+            else
+            {
+                return "";
+            }
+            
         }
 
         private void saveSetList2(string setListName) //This is for List Box
@@ -1169,10 +1175,10 @@ namespace Dads_Audio_App
                         songsListBox.Focus();
                     }
                     if (!songsListBox.Focused && !songsListBox.Focused)
-                    {                        
+                    {
                         songsListBox.Focus();
                     }
-                    
+
                 }
             }
 
@@ -1993,7 +1999,7 @@ namespace Dads_Audio_App
             allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
             if (beforeDeleteCount == allFlagsInfo.Count())
             {
-                MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0].Text}"); 
+                MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0].Text}");
             }
             for (int i = 0; i <= 2; i++)
             {
@@ -2280,9 +2286,63 @@ namespace Dads_Audio_App
         {
             if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
             {
-                e.Handled = true;          
+                e.Handled = true;
                 e.SuppressKeyPress = true;
             }
+        }
+
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        {
+            checkedSongs.Items.Clear();
+            songsListBox.Items.Clear();
+            Point screenPos = Cursor.Position;
+            Point clientPos = this.PointToClient(screenPos);
+            checkSongsPanel.Location = clientPos;
+            checkSongsPanel.Visible = true;
+            checkSongsPanel.BringToFront();
+            string selectedItem = setListListBox.SelectedItem.ToString();
+            loadSongs(selectedItem);
+            selectedSetList = selectedItem;
+            selectedSetListIndex = setListListBox.SelectedIndex;
+            selectedSongLast = false;
+
+            foreach (var song in songsListBox.Items)
+            {
+                checkedSongs.Items.Add(song, false);
+            }
+
+        }
+
+        private void checkAllBox_CheckStateChanged(object sender, EventArgs e)
+        {
+            bool check = checkAllBox.Checked;
+
+            for (int i = 0; i < checkedSongs.Items.Count; i++)
+            {
+                checkedSongs.SetItemChecked(i, check);
+            }
+        }
+
+        private void checkCancelButton_Click(object sender, EventArgs e)
+        {
+            checkSongsPanel.Visible = false;
+        }
+
+        private void checkDoneButton_Click(object sender, EventArgs e)
+        {
+            string result = addSetList();
+
+            if (result != "")
+            {
+                setListListBox.SelectedItem = result;
+                foreach (var song in checkedSongs.CheckedItems)
+                {
+                    songsListBox.Items.Add(song.ToString());
+                }
+                saveSetList2(result);
+            }
+
+            checkSongsPanel.Visible = false;
         }
     }
 }

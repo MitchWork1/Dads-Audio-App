@@ -59,6 +59,7 @@
             flagTextCoolDown = new System.Windows.Forms.Timer(components);
             setListContextMenu = new ContextMenuStrip(components);
             addToolStripMenuItem = new ToolStripMenuItem();
+            toolStripMenuItem4 = new ToolStripMenuItem();
             deleteToolStripMenuItem = new ToolStripMenuItem();
             songsContextMenu = new ContextMenuStrip(components);
             addToolStripMenuItem1 = new ToolStripMenuItem();
@@ -77,6 +78,11 @@
             toolStripMenuItem2 = new ToolStripMenuItem();
             toolStripMenuItem1 = new ToolStripMenuItem();
             scrollBlinkTimer = new System.Windows.Forms.Timer(components);
+            checkedSongs = new CheckedListBox();
+            checkSongsPanel = new Panel();
+            checkAllBox = new CheckBox();
+            checkDoneButton = new Button();
+            checkCancelButton = new Button();
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -86,6 +92,7 @@
             textPanel.SuspendLayout();
             scrollContextStrip.SuspendLayout();
             lyricsBoxContextMenu.SuspendLayout();
+            checkSongsPanel.SuspendLayout();
             SuspendLayout();
             // 
             // playButton
@@ -416,9 +423,9 @@
             // setListContextMenu
             // 
             setListContextMenu.ImageScalingSize = new Size(20, 20);
-            setListContextMenu.Items.AddRange(new ToolStripItem[] { addToolStripMenuItem, deleteToolStripMenuItem });
+            setListContextMenu.Items.AddRange(new ToolStripItem[] { addToolStripMenuItem, toolStripMenuItem4, deleteToolStripMenuItem });
             setListContextMenu.Name = "contextMenuStrip1";
-            setListContextMenu.Size = new Size(150, 48);
+            setListContextMenu.Size = new Size(150, 70);
             setListContextMenu.Opening += contextMenuStrip1_Opening;
             // 
             // addToolStripMenuItem
@@ -427,6 +434,13 @@
             addToolStripMenuItem.Size = new Size(149, 22);
             addToolStripMenuItem.Text = "Add Set-List";
             addToolStripMenuItem.Click += addToolStripMenuItem_Click;
+            // 
+            // toolStripMenuItem4
+            // 
+            toolStripMenuItem4.Name = "toolStripMenuItem4";
+            toolStripMenuItem4.Size = new Size(149, 22);
+            toolStripMenuItem4.Text = "Copy Set-List";
+            toolStripMenuItem4.Click += toolStripMenuItem4_Click;
             // 
             // deleteToolStripMenuItem
             // 
@@ -559,11 +573,64 @@
             scrollBlinkTimer.Interval = 1000;
             scrollBlinkTimer.Tick += scrollBlinkTimer_Tick;
             // 
+            // checkedSongs
+            // 
+            checkedSongs.FormattingEnabled = true;
+            checkedSongs.Location = new Point(3, 29);
+            checkedSongs.Name = "checkedSongs";
+            checkedSongs.Size = new Size(245, 310);
+            checkedSongs.TabIndex = 22;
+            // 
+            // checkSongsPanel
+            // 
+            checkSongsPanel.BorderStyle = BorderStyle.FixedSingle;
+            checkSongsPanel.Controls.Add(checkAllBox);
+            checkSongsPanel.Controls.Add(checkDoneButton);
+            checkSongsPanel.Controls.Add(checkCancelButton);
+            checkSongsPanel.Controls.Add(checkedSongs);
+            checkSongsPanel.Location = new Point(444, 38);
+            checkSongsPanel.Name = "checkSongsPanel";
+            checkSongsPanel.Size = new Size(251, 368);
+            checkSongsPanel.TabIndex = 23;
+            checkSongsPanel.Visible = false;
+            // 
+            // checkAllBox
+            // 
+            checkAllBox.AutoSize = true;
+            checkAllBox.Location = new Point(6, 6);
+            checkAllBox.Name = "checkAllBox";
+            checkAllBox.Size = new Size(76, 19);
+            checkAllBox.TabIndex = 26;
+            checkAllBox.Text = "Check All";
+            checkAllBox.UseVisualStyleBackColor = true;
+            checkAllBox.CheckStateChanged += checkAllBox_CheckStateChanged;
+            // 
+            // checkDoneButton
+            // 
+            checkDoneButton.Location = new Point(173, 342);
+            checkDoneButton.Name = "checkDoneButton";
+            checkDoneButton.Size = new Size(75, 23);
+            checkDoneButton.TabIndex = 25;
+            checkDoneButton.Text = "Done";
+            checkDoneButton.UseVisualStyleBackColor = true;
+            checkDoneButton.Click += checkDoneButton_Click;
+            // 
+            // checkCancelButton
+            // 
+            checkCancelButton.Location = new Point(3, 342);
+            checkCancelButton.Name = "checkCancelButton";
+            checkCancelButton.Size = new Size(75, 23);
+            checkCancelButton.TabIndex = 24;
+            checkCancelButton.Text = "Cancel";
+            checkCancelButton.UseVisualStyleBackColor = true;
+            checkCancelButton.Click += checkCancelButton_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1174, 639);
+            Controls.Add(checkSongsPanel);
             Controls.Add(saveScrollPos);
             Controls.Add(textPanel);
             Controls.Add(generateWaveLabel);
@@ -592,6 +659,8 @@
             textPanel.ResumeLayout(false);
             scrollContextStrip.ResumeLayout(false);
             lyricsBoxContextMenu.ResumeLayout(false);
+            checkSongsPanel.ResumeLayout(false);
+            checkSongsPanel.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -646,5 +715,11 @@
         private ToolStripMenuItem toolStripMenuItem2;
         private ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.Timer scrollBlinkTimer;
+        private ToolStripMenuItem toolStripMenuItem4;
+        private CheckedListBox checkedSongs;
+        private Panel checkSongsPanel;
+        private Button checkDoneButton;
+        private Button checkCancelButton;
+        private CheckBox checkAllBox;
     }
 }
