@@ -35,7 +35,6 @@
             timer1 = new System.Windows.Forms.Timer(components);
             currentTimeLabel = new Label();
             flagButton = new Button();
-            lyricTextBox = new RichTextBox();
             deltaLabel = new Label();
             deltaTimeLabel = new Label();
             treePanel = new Panel();
@@ -67,6 +66,7 @@
             flagsContextStrip = new ContextMenuStrip(components);
             deleteToolStripMenuItem2 = new ToolStripMenuItem();
             textPanel = new Panel();
+            lyricTextBoxOutline = new Panel();
             dummyButton = new Button();
             saveScrollPos = new Button();
             scrollCoolDown = new System.Windows.Forms.Timer(components);
@@ -83,6 +83,7 @@
             checkAllBox = new CheckBox();
             checkDoneButton = new Button();
             checkCancelButton = new Button();
+            updateTimer = new System.Windows.Forms.Timer(components);
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -144,26 +145,6 @@
             flagButton.UseVisualStyleBackColor = true;
             flagButton.Visible = false;
             flagButton.Click += flagButton_Click;
-            // 
-            // lyricTextBox
-            // 
-            lyricTextBox.BackColor = SystemColors.ButtonHighlight;
-            lyricTextBox.BorderStyle = BorderStyle.None;
-            lyricTextBox.Enabled = false;
-            lyricTextBox.Location = new Point(4, 4);
-            lyricTextBox.Name = "lyricTextBox";
-            lyricTextBox.ReadOnly = true;
-            lyricTextBox.ShowSelectionMargin = true;
-            lyricTextBox.Size = new Size(444, 446);
-            lyricTextBox.TabIndex = 8;
-            lyricTextBox.TabStop = false;
-            lyricTextBox.Text = "";
-            lyricTextBox.TextChanged += lyricTextBox_TextChanged;
-            lyricTextBox.KeyDown += lyricTextBox_KeyDown;
-            lyricTextBox.Leave += lyricTextBox_Leave;
-            lyricTextBox.MouseDown += lyricTextBox_MouseDown;
-            lyricTextBox.MouseEnter += lyricTextBox_MouseEnter;
-            lyricTextBox.PreviewKeyDown += lyricTextBox_PreviewKeyDown;
             // 
             // deltaLabel
             // 
@@ -487,14 +468,21 @@
             // 
             // textPanel
             // 
-            textPanel.BackColor = SystemColors.ActiveCaption;
-            textPanel.BorderStyle = BorderStyle.FixedSingle;
-            textPanel.Controls.Add(lyricTextBox);
+            textPanel.BackColor = SystemColors.Control;
+            textPanel.Controls.Add(lyricTextBoxOutline);
             textPanel.Controls.Add(dummyButton);
-            textPanel.Location = new Point(711, 33);
+            textPanel.Location = new Point(693, 33);
             textPanel.Name = "textPanel";
-            textPanel.Size = new Size(454, 456);
+            textPanel.Size = new Size(472, 456);
             textPanel.TabIndex = 20;
+            // 
+            // lyricTextBoxOutline
+            // 
+            lyricTextBoxOutline.BackColor = SystemColors.ActiveCaption;
+            lyricTextBoxOutline.Location = new Point(17, 0);
+            lyricTextBoxOutline.Name = "lyricTextBoxOutline";
+            lyricTextBoxOutline.Size = new Size(454, 456);
+            lyricTextBoxOutline.TabIndex = 23;
             // 
             // dummyButton
             // 
@@ -625,6 +613,11 @@
             checkCancelButton.UseVisualStyleBackColor = true;
             checkCancelButton.Click += checkCancelButton_Click;
             // 
+            // updateTimer
+            // 
+            updateTimer.Interval = 40;
+            updateTimer.Tick += updateTimer_Tick;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -673,7 +666,6 @@
         private System.Windows.Forms.Timer timer1;
         private Label currentTimeLabel;
         private Button flagButton;
-        private RichTextBox lyricTextBox;
         private Label deltaLabel;
         private Label deltaTimeLabel;
         private Panel treePanel;
@@ -721,5 +713,7 @@
         private Button checkDoneButton;
         private Button checkCancelButton;
         private CheckBox checkAllBox;
+        private Panel lyricTextBoxOutline;
+        private System.Windows.Forms.Timer updateTimer;
     }
 }

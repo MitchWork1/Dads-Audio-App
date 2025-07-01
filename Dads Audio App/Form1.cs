@@ -55,6 +55,7 @@ namespace Dads_Audio_App
         Bitmap mainLineImage;
         Bitmap scrollFlagImage;
         Bitmap flagLineImage;
+        Bitmap scrollIndicatorImage;
         private Point mainLineLocation;
         private PictureBox mainLine;
         bool userDeletedRow = false;
@@ -106,6 +107,10 @@ namespace Dads_Audio_App
         private bool scrollCoolDownBool;
         private int highlightedScrollStart;
         private int highlightedScrollLength;
+        private List<(int CharIndex, Button Button)> scrollIndicators = new List<(int, Button)>();
+        private ScrollableRichTextBox lyricTextBox = new ScrollableRichTextBox();
+        private int tick_amt;
+
 
         //Must add selecting audio and moving that file into songs folder
         //Questions
@@ -116,6 +121,7 @@ namespace Dads_Audio_App
         public Form1()
         {
             InitializeComponent();
+            replaceLyricBox();
             this.WindowState = FormWindowState.Maximized; // Maximize the window
             createFolders();
             loadImages();
@@ -129,6 +135,25 @@ namespace Dads_Audio_App
             setListSearchLabel.Text = "";
         }
 
+        private void replaceLyricBox()
+        {
+            lyricTextBox.BackColor = SystemColors.ButtonHighlight;
+            lyricTextBox.ScrollBars = RichTextBoxScrollBars.ForcedVertical;
+            lyricTextBox.Enabled = false;
+            lyricTextBox.ShowSelectionMargin = true;
+            lyricTextBox.AcceptsTab = false;
+            lyricTextBox.Location = new Point(22, 4);
+            lyricTextBox.Size = new Size(444, 446);
+            textPanel.Controls.Add(lyricTextBox);
+            lyricTextBox.BringToFront();
+            lyricTextBox.Scrolled += (s, e) => UpdateScrollIndicatorPositions();
+            lyricTextBox.Leave += lyricTextBox_Leave;
+            lyricTextBox.MouseDown += lyricTextBox_MouseDown;
+            lyricTextBox.KeyDown += lyricTextBox_KeyDown;
+            lyricTextBox.PreviewKeyDown += lyricTextBox_PreviewKeyDown;
+
+        }
+
         private void loadImages()
         {
             string launch = AppDomain.CurrentDomain.BaseDirectory;
@@ -136,9 +161,10 @@ namespace Dads_Audio_App
             mainLineImage = new Bitmap(launch + "\\mainLineImage.png");
             scrollFlagImage = new Bitmap(launch + "\\ScrollFlag.png");
             flagLineImage = new Bitmap(launch + "\\flagLineImage.png");
+            scrollIndicatorImage = new Bitmap(launch + "\\ScrollIndicator.png");
             flagImage.MakeTransparent(Color.White);
             scrollFlagImage.MakeTransparent(Color.White);
-
+            scrollIndicatorImage.MakeTransparent(Color.White);
         }
 
         private void ListOutputDevices() //Not needed
@@ -1071,7 +1097,7 @@ namespace Dads_Audio_App
             {
                 return "";
             }
-            
+
         }
 
         private void saveSetList2(string setListName) //This is for List Box
@@ -1297,6 +1323,12 @@ namespace Dads_Audio_App
 
         private void playSongV2(bool fromPlay, string songName)
         {
+            foreach (var (_, button) in scrollIndicators)
+            {
+                textPanel.Controls.Remove(button);
+                button.Dispose();
+            }
+            scrollIndicators.Clear();            
             allFlagsInfo.Clear();
             controlPanel.Controls.Clear();
             flagControls.Clear();
@@ -1354,7 +1386,7 @@ namespace Dads_Audio_App
                     for (int i = 1; i < lyricScroll.Count(); i++)
                     {
                         string[] split = lyricScroll[i].Split(';');
-                        lyricScrollInfo.Add(new string[] { split[0], split[1], split[2] }); //[0]-progressbarvalue [1]-name [2]-scrollvalue
+                        lyricScrollInfo.Add(new string[] { split[0], split[1], split[2] }); //[0]-progressbarvalue [1]-name [2]-scrollcaretvalue
                     }
 
                     lyricTextBox.Rtf = allLyrics;
@@ -1363,6 +1395,8 @@ namespace Dads_Audio_App
                 createAllFlagsV2();
                 createAllScrollFlags();
                 timer1.Start();
+                tick_amt = 0;
+                updateTimer.Start();
             }
             else
             {
@@ -1385,6 +1419,7 @@ namespace Dads_Audio_App
             foreach (var flag in lyricScrollInfo)
             {
                 createFlagAt(int.Parse(flag[0]), flag[1], true);
+                createScrollIndicator(int.Parse(flag[2]));
             }
         }
 
@@ -1405,7 +1440,7 @@ namespace Dads_Audio_App
             {
                 flagText += "^" + flag[0] + ";" + flag[1]; //flag[0] = name, flag[1] = PBvalue
             }
-            foreach (var scroll in lyricScrollInfo) //[0]-progressbarvalue [1]-name [2]-scrollvalue
+            foreach (var scroll in lyricScrollInfo) //[0]-progressbarvalue [1]-name [2]-scrollcaretvalue [3] - fontHeightPx
             {
                 lyricScroll += "^" + scroll[0] + ";" + scroll[1] + ";" + scroll[2];
             }
@@ -1996,7 +2031,9 @@ namespace Dads_Audio_App
             Control[] controlsToDelete = flagControls[flagsButtonToDeleteIndex];
             int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
             int beforeDeleteCount = allFlagsInfo.Count();
+
             allFlagsInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
+
             if (beforeDeleteCount == allFlagsInfo.Count())
             {
                 MessageBox.Show($"ERROR:\nNo flag with the PBValue: {PBValue}.\nOR\nNo Flag with name: {controlsToDelete[0].Text}");
@@ -2032,8 +2069,9 @@ namespace Dads_Audio_App
         {
             textPanel.Size = new Size((int)(ClientSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height / 2);
             textPanel.Location = new Point((int)(ClientSize.Width - textPanel.Size.Width - ((int)(ClientSize.Width * 0.02))), songsHeader.Location.Y + treePanel.Location.Y);
-            lyricTextBox.Size = new Size(textPanel.Size.Width - 10, textPanel.Size.Height - 10);
-            lyricTextBox.Location = new Point(4, 4);
+            lyricTextBox.Size = new Size(textPanel.Size.Width - 32, textPanel.Size.Height - 10);
+            lyricTextBox.Location = new Point(22, 4);
+            lyricTextBoxOutline.Size = new Size(lyricTextBox.Size.Width + 10, lyricTextBox.Size.Height + 10);
             fontButton.Location = new Point(textPanel.Location.X, textPanel.Location.Y - fontButton.Size.Height - 4);
             saveScrollPos.Location = new Point(textPanel.Location.X + fontButton.Size.Width + 4, fontButton.Location.Y);
         }
@@ -2117,25 +2155,29 @@ namespace Dads_Audio_App
                 int count = lyricScrollInfo.Count + 1;
                 string label = "Scroll " + count;
 
-                //Start of Adding in scroll and formating
-                int lineIndex = lyricTextBox.GetLineFromCharIndex(lyricTextBox.SelectionStart);
-                int lineStart = lyricTextBox.GetFirstCharIndexFromLine(lineIndex);
-                string lineText = lyricTextBox.Lines[lineIndex];
-                int lineLength = lineText.Length;
-                lyricTextBox.SelectionStart = lineStart;
-                lyricTextBox.SelectionLength = lineLength;
-                var oldFont = lyricTextBox.SelectionFont;
-                var oldColor = lyricTextBox.SelectionColor;
-                lyricTextBox.SelectedText = lineText + " <--Scroll " + count + " -->";
-                lyricTextBox.SelectionFont = oldFont;
-                lyricTextBox.SelectionColor = oldColor;
-                //highlightedScrollStart = lyricTextBox.GetFirstCharIndexFromLine(line);
-                //highlightedScrollLength = lyricTextBox.Lines[line].Length;
-                //lyricTextBox.Select(highlightedScrollStart, highlightedScrollLength);
-                //lyricTextBox.SelectionBackColor = Color.LightBlue;
+                Font caretFont = lyricTextBox.SelectionFont ?? lyricTextBox.Font;
+                Point screenCaretTop = lyricTextBox.PointToScreen(lyricTextBox.GetPositionFromCharIndex(caretIndex));
+                Point clientCaretTop = this.PointToClient(screenCaretTop);
+                float dpiY = lyricTextBox.CreateGraphics().DpiY;
+                float fontHeightPx = caretFont.SizeInPoints * dpiY / 72f;
+                int centeredY = (int)(clientCaretTop.Y - textPanel.Location.Y + fontHeightPx / 2 - 8); // 8 is half the icon height
+                Button scrollIndicatorButton = new Button();
+                scrollIndicatorButton.Text = "";
+                scrollIndicatorButton.BackColor = Color.Transparent;
+                scrollIndicatorButton.FlatStyle = FlatStyle.Flat;
+                scrollIndicatorButton.FlatAppearance.BorderSize = 0;
+                scrollIndicatorButton.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                scrollIndicatorButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
+                scrollIndicatorButton.BackgroundImageLayout = ImageLayout.Zoom;
+                scrollIndicatorButton.BackgroundImage = scrollIndicatorImage;
+                scrollIndicatorButton.Size = new Size(16, 16);
+                scrollIndicatorButton.Location = new Point(0, centeredY);
 
-                //End of scroll and formating
-                //
+                textPanel.Controls.Add(scrollIndicatorButton);
+                scrollIndicatorButton.BringToFront();
+
+                scrollIndicators.Add((caretIndex, scrollIndicatorButton));
+
                 lyricScrollInfo.Add(new string[] { audioBar.Value.ToString(), label, caretIndex.ToString() });
                 createFlagAt(audioBar.Value, label, true);
                 saveFileV2(currentSongNameNoExt);
@@ -2144,6 +2186,32 @@ namespace Dads_Audio_App
             {
                 MessageBox.Show("Cannot add position to scroll as text box is empty");
             }
+        }
+
+        private void UpdateScrollIndicatorPositions()
+        {
+            using (Graphics g = lyricTextBox.CreateGraphics())
+            {
+                float dpiY = g.DpiY;
+
+                foreach (var (charIndex, button) in scrollIndicators)
+                {
+                    Font font = lyricTextBox.SelectionFont ?? lyricTextBox.Font;
+
+                    // Get on-screen position of character
+                    Point screenPos = lyricTextBox.PointToScreen(lyricTextBox.GetPositionFromCharIndex(charIndex));
+                    Point clientPos = this.PointToClient(screenPos);
+
+                    float fontHeight = font.SizeInPoints * dpiY / 72f;
+                    int centeredY = (int)(clientPos.Y - textPanel.Location.Y + fontHeight / 2 - button.Height / 2);
+
+                    button.Location = new Point(button.Location.X, centeredY);
+                }
+            }
+            tick_amt = 0;
+            updateTimer.Stop();
+            updateTimer.Start();
+
         }
 
         private void scrollCoolDown_Tick(object sender, EventArgs e)
@@ -2163,27 +2231,27 @@ namespace Dads_Audio_App
 
         private void deleteToolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            if (sender != null)
-            {
-                lyricTextBox.SelectionStart = int.Parse(lyricScrollInfo[draggingIndexScrollBtn][2]);
-                int lineIndex = lyricTextBox.GetLineFromCharIndex(lyricTextBox.SelectionStart);
-                int lineStart = lyricTextBox.GetFirstCharIndexFromLine(lineIndex);
-                string lineText = lyricTextBox.Lines[lineIndex];
-                int lineLength = lineText.Length;
-                lyricTextBox.SelectionStart = lineStart;
-                lyricTextBox.SelectionLength = lineLength;
-                var oldFont = lyricTextBox.SelectionFont;
-                var oldColor = lyricTextBox.SelectionColor;
-
-                string[] split = lineText.Split(" <--");
-
-                lyricTextBox.SelectedText = split[0];
-                lyricTextBox.SelectionFont = oldFont;
-                lyricTextBox.SelectionColor = oldColor;
-            }
             Control[] controlsToDelete = flagScrollControls[draggingIndexScrollBtn];
             int PBValue = xLocationToPBValue(controlsToDelete[1].Location.X + controlsToDelete[1].Width);
+
+            var matchingItems = lyricScrollInfo.Where(x => x[1].ToString() == controlsToDelete[0].Text && x[0].ToString() == PBValue.ToString()).ToList();
+
+            foreach (var item in matchingItems)
+            {
+                int target = int.Parse(item[2]);
+                foreach (var scroll in scrollIndicators.ToList())
+                {
+                    if (scroll.CharIndex == target)
+                    {
+                        textPanel.Controls.Remove(scroll.Button);
+                        scroll.Button.Dispose();
+                        break;
+                    }
+                }
+            }
+
             lyricScrollInfo.RemoveAll(x => x[1].ToString() == controlsToDelete[0].Text && x[0] == PBValue.ToString());
+
             for (int i = 0; i <= 2; i++)
             {
                 Control controlToDelete = controlsToDelete[i];
@@ -2343,6 +2411,55 @@ namespace Dads_Audio_App
             }
 
             checkSongsPanel.Visible = false;
+        }
+
+        private void updateTimer_Tick(object sender, EventArgs e)
+        {
+            int threshold = 1000;
+            if(tick_amt == threshold)
+            {
+                updateTimer.Stop();
+            }
+            else
+            {
+                UpdateScrollIndicatorPositions();
+                tick_amt += 1;
+            }
+        }
+
+        private void createScrollIndicator(int caretIndex)
+        {
+            using (Graphics g = lyricTextBox.CreateGraphics())
+            {
+                Button scrollIndicatorButton = new Button();
+                scrollIndicatorButton.Text = "";
+                scrollIndicatorButton.BackColor = Color.Transparent;
+                scrollIndicatorButton.FlatStyle = FlatStyle.Flat;
+                scrollIndicatorButton.FlatAppearance.BorderSize = 0;
+                scrollIndicatorButton.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                scrollIndicatorButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
+                scrollIndicatorButton.BackgroundImageLayout = ImageLayout.Zoom;
+                scrollIndicatorButton.BackgroundImage = scrollIndicatorImage;
+                scrollIndicatorButton.Size = new Size(16, 16);                
+
+                float dpiY = g.DpiY;
+
+                Font font = lyricTextBox.SelectionFont ?? lyricTextBox.Font;
+
+                // Get on-screen position of character
+                Point screenPos = lyricTextBox.PointToScreen(lyricTextBox.GetPositionFromCharIndex(caretIndex));
+                Point clientPos = this.PointToClient(screenPos);
+
+                float fontHeight = font.SizeInPoints * dpiY / 72f;
+                int centeredY = (int)(clientPos.Y - textPanel.Location.Y + fontHeight / 2 - scrollIndicatorButton.Height / 2);
+
+                scrollIndicatorButton.Location = new Point(0, centeredY);
+
+                textPanel.Controls.Add(scrollIndicatorButton);
+                scrollIndicatorButton.BringToFront();
+
+                scrollIndicators.Add((caretIndex, scrollIndicatorButton));
+            }          
         }
     }
 }
