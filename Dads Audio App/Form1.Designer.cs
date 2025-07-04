@@ -84,6 +84,7 @@
             checkDoneButton = new Button();
             checkCancelButton = new Button();
             updateTimer = new System.Windows.Forms.Timer(components);
+            button1 = new Button();
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -121,6 +122,7 @@
             audioBar.Name = "audioBar";
             audioBar.Size = new Size(1101, 23);
             audioBar.TabIndex = 4;
+            audioBar.Visible = false;
             // 
             // timer1
             // 
@@ -618,11 +620,22 @@
             updateTimer.Interval = 40;
             updateTimer.Tick += updateTimer_Tick;
             // 
+            // button1
+            // 
+            button1.Location = new Point(1090, 4);
+            button1.Name = "button1";
+            button1.Size = new Size(75, 23);
+            button1.TabIndex = 24;
+            button1.Text = "button1";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1174, 639);
+            Controls.Add(button1);
             Controls.Add(checkSongsPanel);
             Controls.Add(saveScrollPos);
             Controls.Add(textPanel);
@@ -715,5 +728,6 @@
         private CheckBox checkAllBox;
         private Panel lyricTextBoxOutline;
         private System.Windows.Forms.Timer updateTimer;
+        private Button button1;
     }
 }

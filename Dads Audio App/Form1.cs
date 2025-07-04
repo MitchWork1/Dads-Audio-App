@@ -135,6 +135,43 @@ namespace Dads_Audio_App
             setListSearchLabel.Text = "";
         }
 
+        private void theme1()
+        {
+            Color themeBackColorStrong = Color.FromArgb(17, 21, 38);
+            Color themeBackColorWeak = Color.FromArgb(24, 30, 54);
+            Color themeForeColor = Color.FromArgb(0, 126, 249);
+            Color themeBaseColor = Color.FromArgb(46, 51, 73);
+
+            this.BackColor = themeBaseColor;
+            this.ForeColor = themeForeColor;
+
+            songsHeader.BackColor = themeBackColorStrong;
+            songsHeader.ForeColor = themeForeColor;
+            setListHeader.BackColor = songsHeader.BackColor;
+            setListHeader.ForeColor = songsHeader.ForeColor;
+
+            setListListBox.BackColor = themeBackColorWeak;
+            setListListBox.ForeColor = themeForeColor;
+            songsListBox.BackColor = setListListBox.BackColor;
+            songsListBox.ForeColor = setListListBox.ForeColor;
+
+            songsListBox.BorderStyle = BorderStyle.None;
+            setListListBox.BorderStyle = BorderStyle.None;
+            songsHeader.BorderStyle = BorderStyle.None;
+            setListHeader.BorderStyle = BorderStyle.None;
+
+            addSongsButton.BackColor = themeBackColorWeak;
+            addSongsButton.FlatStyle = FlatStyle.Popup;
+
+            playButton.BackColor = themeBackColorWeak;
+            playButton.FlatStyle = FlatStyle.Popup;
+
+            textPanel.BackColor = themeBaseColor;
+            lyricTextBoxOutline.BackColor = themeBackColorWeak;
+
+        }
+
+
         private void replaceLyricBox()
         {
             lyricTextBox.BackColor = SystemColors.ButtonHighlight;
@@ -1328,7 +1365,7 @@ namespace Dads_Audio_App
                 textPanel.Controls.Remove(button);
                 button.Dispose();
             }
-            scrollIndicators.Clear();            
+            scrollIndicators.Clear();
             allFlagsInfo.Clear();
             controlPanel.Controls.Clear();
             flagControls.Clear();
@@ -2416,7 +2453,7 @@ namespace Dads_Audio_App
         private void updateTimer_Tick(object sender, EventArgs e)
         {
             int threshold = 1000;
-            if(tick_amt == threshold)
+            if (tick_amt == threshold)
             {
                 updateTimer.Stop();
             }
@@ -2440,7 +2477,7 @@ namespace Dads_Audio_App
                 scrollIndicatorButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
                 scrollIndicatorButton.BackgroundImageLayout = ImageLayout.Zoom;
                 scrollIndicatorButton.BackgroundImage = scrollIndicatorImage;
-                scrollIndicatorButton.Size = new Size(16, 16);                
+                scrollIndicatorButton.Size = new Size(16, 16);
 
                 float dpiY = g.DpiY;
 
@@ -2459,7 +2496,12 @@ namespace Dads_Audio_App
                 scrollIndicatorButton.BringToFront();
 
                 scrollIndicators.Add((caretIndex, scrollIndicatorButton));
-            }          
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            theme1();
         }
     }
 }
