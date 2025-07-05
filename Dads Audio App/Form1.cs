@@ -110,6 +110,7 @@ namespace Dads_Audio_App
         private List<(int CharIndex, Button Button)> scrollIndicators = new List<(int, Button)>();
         private ScrollableRichTextBox lyricTextBox = new ScrollableRichTextBox();
         private int tick_amt;
+        private List<Theme> themesList = new List<Theme>();
 
 
         //Must add selecting audio and moving that file into songs folder
@@ -121,6 +122,7 @@ namespace Dads_Audio_App
         public Form1()
         {
             InitializeComponent();
+            loadThemes();
             replaceLyricBox();
             this.WindowState = FormWindowState.Maximized; // Maximize the window
             createFolders();
@@ -135,23 +137,34 @@ namespace Dads_Audio_App
             setListSearchLabel.Text = "";
         }
 
-        private void theme1()
+        public class Theme
         {
-            Color themeBackColorStrong = Color.FromArgb(17, 21, 38);
-            Color themeBackColorWeak = Color.FromArgb(24, 30, 54);
-            Color themeForeColor = Color.FromArgb(0, 126, 249);
-            Color themeBaseColor = Color.FromArgb(46, 51, 73);
+            public Color backColorStrong { get; set; }
+            public Color backColorWeak { get; set; }
+            public Color foreColor { get; set; }
+            public Color baseColor { get; set; }
 
-            this.BackColor = themeBaseColor;
-            this.ForeColor = themeForeColor;
+            public Theme(Color backColorStrong, Color backColorWeak, Color foreColor, Color baseColor)
+            {
+                this.backColorStrong = backColorStrong;
+                this.backColorWeak = backColorWeak;
+                this.foreColor = foreColor;
+                this.baseColor = baseColor;
+            }
+        }
 
-            songsHeader.BackColor = themeBackColorStrong;
-            songsHeader.ForeColor = themeForeColor;
+        private void applyTheme(Theme theme)
+        {
+            this.BackColor = theme.baseColor;
+            this.ForeColor = theme.foreColor;
+
+            songsHeader.BackColor = theme.backColorStrong;
+            songsHeader.ForeColor = theme.foreColor;
             setListHeader.BackColor = songsHeader.BackColor;
             setListHeader.ForeColor = songsHeader.ForeColor;
 
-            setListListBox.BackColor = themeBackColorWeak;
-            setListListBox.ForeColor = themeForeColor;
+            setListListBox.BackColor = theme.backColorWeak;
+            setListListBox.ForeColor = theme.foreColor;
             songsListBox.BackColor = setListListBox.BackColor;
             songsListBox.ForeColor = setListListBox.ForeColor;
 
@@ -160,15 +173,30 @@ namespace Dads_Audio_App
             songsHeader.BorderStyle = BorderStyle.None;
             setListHeader.BorderStyle = BorderStyle.None;
 
-            addSongsButton.BackColor = themeBackColorWeak;
+            textPanel.BackColor = theme.baseColor;
+            lyricTextBoxOutline.BackColor = theme.backColorWeak;
+
+            //All Buttons
+            addSongsButton.BackColor = theme.backColorWeak;
             addSongsButton.FlatStyle = FlatStyle.Popup;
 
-            playButton.BackColor = themeBackColorWeak;
+            playButton.BackColor = theme.backColorWeak;
             playButton.FlatStyle = FlatStyle.Popup;
 
-            textPanel.BackColor = themeBaseColor;
-            lyricTextBoxOutline.BackColor = themeBackColorWeak;
+            saveScrollPos.BackColor = theme.backColorWeak;
+            saveScrollPos.FlatStyle = FlatStyle.Popup;
 
+            fontButton.BackColor = theme.backColorWeak;
+            fontButton.FlatStyle = FlatStyle.Popup;
+
+            setlistDeleteButton.BackColor = theme.backColorWeak;
+            setlistDeleteButton.FlatStyle = FlatStyle.Popup;
+
+            newSetListButton.BackColor = theme.backColorWeak;
+            newSetListButton.FlatStyle = FlatStyle.Popup;
+
+            flagButton.BackColor = theme.backColorWeak;
+            flagButton.FlatStyle = FlatStyle.Popup;
         }
 
 
@@ -2109,8 +2137,8 @@ namespace Dads_Audio_App
             lyricTextBox.Size = new Size(textPanel.Size.Width - 32, textPanel.Size.Height - 10);
             lyricTextBox.Location = new Point(22, 4);
             lyricTextBoxOutline.Size = new Size(lyricTextBox.Size.Width + 10, lyricTextBox.Size.Height + 10);
-            fontButton.Location = new Point(textPanel.Location.X, textPanel.Location.Y - fontButton.Size.Height - 4);
-            saveScrollPos.Location = new Point(textPanel.Location.X + fontButton.Size.Width + 4, fontButton.Location.Y);
+            fontButton.Location = new Point(textPanel.Location.X + lyricTextBoxOutline.Location.X, textPanel.Location.Y - fontButton.Size.Height - 4);
+            saveScrollPos.Location = new Point(textPanel.Location.X + lyricTextBoxOutline.Location.X + fontButton.Size.Width + 4, fontButton.Location.Y);
         }
 
         private void setTreePanelAndChildrenSizes(Point treePanelLoc, Size treePanelSize)
@@ -2501,7 +2529,20 @@ namespace Dads_Audio_App
 
         private void button1_Click(object sender, EventArgs e)
         {
-            theme1();
+            if(themesList.Count > 0)
+            {
+                applyTheme(themesList[0]);
+            }
+        }
+
+        private void loadThemes()
+        {
+            //foreach (var item in collection)
+            //{
+            //    themesList.Add(new Theme())
+            //}
+
+            themesList.Add(new Theme(Color.FromArgb(17, 21, 38), Color.FromArgb(24, 30, 54), Color.FromArgb(0, 126, 249), Color.FromArgb(46, 51, 73)));
         }
     }
 }
