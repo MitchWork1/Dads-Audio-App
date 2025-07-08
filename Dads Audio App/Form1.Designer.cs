@@ -322,9 +322,9 @@
             // controlPanel
             // 
             controlPanel.Controls.Add(audioBar);
-            controlPanel.Location = new Point(0, 502);
+            controlPanel.Location = new Point(0, 499);
             controlPanel.Name = "controlPanel";
-            controlPanel.Size = new Size(1176, 140);
+            controlPanel.Size = new Size(1174, 140);
             controlPanel.TabIndex = 15;
             controlPanel.MouseDoubleClick += controlPanel_DoubleClick;
             // 

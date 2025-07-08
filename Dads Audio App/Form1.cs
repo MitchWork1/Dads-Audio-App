@@ -2125,15 +2125,17 @@ namespace Dads_Audio_App
 
         private void setControlSizes()
         {
-            setTreePanelAndChildrenSizes(new Point((int)(ClientSize.Width * 0.01), treePanel.Location.Y), new Size((int)(ClientSize.Width * 0.35), (int)(ClientSize.Height * 0.75)));
-            setControlPanelAndChildrenSizes(new Point(0, (int)(ClientSize.Height * 0.80)), new Size(ClientSize.Width, controlPanel.Size.Height));
+            System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
+            setTreePanelAndChildrenSizes(new Point((int)(workingSize.Width * 0.01), treePanel.Location.Y), new Size((int)(workingSize.Width * 0.35), (int)(workingSize.Height * 0.75)));
+            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * 0.80)), new Size(workingSize.Width, controlPanel.Size.Height));
             setTextPanelSizes();
         }
 
         private void setTextPanelSizes()
         {
-            textPanel.Size = new Size((int)(ClientSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height / 2);
-            textPanel.Location = new Point((int)(ClientSize.Width - textPanel.Size.Width - ((int)(ClientSize.Width * 0.02))), songsHeader.Location.Y + treePanel.Location.Y);
+            System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
+            textPanel.Size = new Size((int)(workingSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height / 2);
+            textPanel.Location = new Point((int)(workingSize.Width - textPanel.Size.Width - ((int)(workingSize.Width * 0.02))), songsHeader.Location.Y + treePanel.Location.Y);
             lyricTextBox.Size = new Size(textPanel.Size.Width - 32, textPanel.Size.Height - 10);
             lyricTextBox.Location = new Point(22, 4);
             lyricTextBoxOutline.Size = new Size(lyricTextBox.Size.Width + 10, lyricTextBox.Size.Height + 10);
@@ -2167,12 +2169,13 @@ namespace Dads_Audio_App
         }
         private void setControlPanelAndChildrenSizes(Point controlPanelLocation, Size controlPanelSize)
         {
+            System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
             if (mainLine != null)
             {
                 controlPanel.Location = controlPanelLocation;
                 controlPanel.Size = controlPanelSize;
                 audioBar.Size = new Size((int)(controlPanelSize.Width * 0.958), audioBar.Height);
-                audioBar.Location = new Point((int)(ClientSize.Width * 0.02), audioBar.Location.Y);
+                audioBar.Location = new Point((int)(workingSize.Width * 0.02), audioBar.Location.Y);
                 mainLine.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y - 25);
                 mainLineButton.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y + 75);
                 currentTimeLabel.Location = new Point(audioBar.Location.X, controlPanelLocation.Y + controlPanelSize.Height);
