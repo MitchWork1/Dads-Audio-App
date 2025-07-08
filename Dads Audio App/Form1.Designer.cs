@@ -321,6 +321,7 @@
             // 
             // controlPanel
             // 
+            controlPanel.BorderStyle = BorderStyle.FixedSingle;
             controlPanel.Controls.Add(audioBar);
             controlPanel.Location = new Point(0, 499);
             controlPanel.Name = "controlPanel";

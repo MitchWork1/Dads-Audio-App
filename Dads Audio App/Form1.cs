@@ -291,6 +291,7 @@ namespace Dads_Audio_App
             mainLineButton.MouseUp += mainLineButton_MouseUp;
             mainLineButton.MouseMove += mainLineButton_MouseMove;
 
+            
             this.Controls.Add(mainLineButton);
             mainLineButton.Visible = false;
 
@@ -2126,15 +2127,17 @@ namespace Dads_Audio_App
         private void setControlSizes()
         {
             System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
-            setTreePanelAndChildrenSizes(new Point((int)(workingSize.Width * 0.01), treePanel.Location.Y), new Size((int)(workingSize.Width * 0.35), (int)(workingSize.Height * 0.75)));
-            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * 0.80)), new Size(workingSize.Width, (int)(workingSize.Height * 0.25)));
+            workingSize.Height = (int)(workingSize.Height * 0.92);
+            double y_scale = 0.7;
+            setTreePanelAndChildrenSizes(new Point((int)(workingSize.Width * 0.01), treePanel.Location.Y), new Size((int)(workingSize.Width * 0.35), (int)(workingSize.Height * y_scale)));
+            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * 0.75)), new Size(workingSize.Width, (int)(workingSize.Height * (1- y_scale))));
             setTextPanelSizes();
         }
 
         private void setTextPanelSizes()
         {
             System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
-            textPanel.Size = new Size((int)(workingSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height / 2);
+            textPanel.Size = new Size((int)(workingSize.Width * 0.6), songsListBox.Size.Height + songsHeader.Size.Height / 2 + setListSearchLabel.Size.Height - 4);
             textPanel.Location = new Point((int)(workingSize.Width - textPanel.Size.Width - ((int)(workingSize.Width * 0.02))), songsHeader.Location.Y + treePanel.Location.Y);
             lyricTextBox.Size = new Size(textPanel.Size.Width - 32, textPanel.Size.Height - 10);
             lyricTextBox.Location = new Point(22, 4);
