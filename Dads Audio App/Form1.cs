@@ -2127,7 +2127,7 @@ namespace Dads_Audio_App
         {
             System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
             setTreePanelAndChildrenSizes(new Point((int)(workingSize.Width * 0.01), treePanel.Location.Y), new Size((int)(workingSize.Width * 0.35), (int)(workingSize.Height * 0.75)));
-            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * 0.80)), new Size(workingSize.Width, controlPanel.Size.Height));
+            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * 0.80)), new Size(workingSize.Width, (int)(workingSize.Height * 0.25)));
             setTextPanelSizes();
         }
 
@@ -2178,7 +2178,7 @@ namespace Dads_Audio_App
                 audioBar.Location = new Point((int)(workingSize.Width * 0.02), audioBar.Location.Y);
                 mainLine.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y - 25);
                 mainLineButton.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y + 75);
-                currentTimeLabel.Location = new Point(audioBar.Location.X, controlPanelLocation.Y + controlPanelSize.Height);
+                currentTimeLabel.Location = new Point(audioBar.Location.X, (int)(controlPanelLocation.Y + mainLine.Size.Height * 1.1 + mainLineButton.Size.Height));
                 playButton.Location = new Point(audioBar.Location.X, controlPanelLocation.Y - 30);
                 flagButton.Location = new Point(playButton.Location.X + playButton.Size.Width + 7, playButton.Location.Y);
                 if (currentInfrontWave != null && currentInfrontWave != null)
