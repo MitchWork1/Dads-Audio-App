@@ -2121,7 +2121,7 @@ namespace Dads_Audio_App
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            setControlSizes(0.78);
+            setControlSizes(0.75);
         }
 
         private void setControlSizes(double y_scale)
@@ -2548,18 +2548,6 @@ namespace Dads_Audio_App
             //}
 
             themesList.Add(new Theme(Color.FromArgb(17, 21, 38), Color.FromArgb(24, 30, 54), Color.FromArgb(0, 126, 249), Color.FromArgb(46, 51, 73)));
-        }
-
-        private void trackBar1_Scroll(object sender, EventArgs e)
-        {
-
-        }
-
-        private void trackBar1_ValueChanged_1(object sender, EventArgs e)
-        {
-            double y_value = trackBar1.Value / 100.0;
-            label2.Text = y_value.ToString();
-            setControlSizes(y_value);
         }
     }
 }

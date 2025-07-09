@@ -85,8 +85,6 @@
             checkCancelButton = new Button();
             updateTimer = new System.Windows.Forms.Timer(components);
             button1 = new Button();
-            trackBar1 = new TrackBar();
-            label2 = new Label();
             treePanel.SuspendLayout();
             controlPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -97,7 +95,6 @@
             scrollContextStrip.SuspendLayout();
             lyricsBoxContextMenu.SuspendLayout();
             checkSongsPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
             SuspendLayout();
             // 
             // playButton
@@ -634,33 +631,11 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // trackBar1
-            // 
-            trackBar1.Location = new Point(915, 4);
-            trackBar1.Maximum = 100;
-            trackBar1.Minimum = 70;
-            trackBar1.Name = "trackBar1";
-            trackBar1.Size = new Size(138, 45);
-            trackBar1.TabIndex = 25;
-            trackBar1.Value = 70;
-            trackBar1.Scroll += trackBar1_Scroll;
-            trackBar1.ValueChanged += trackBar1_ValueChanged_1;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(1059, 8);
-            label2.Name = "label2";
-            label2.Size = new Size(38, 15);
-            label2.TabIndex = 26;
-            label2.Text = "label2";
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1174, 639);
-            Controls.Add(label2);
             Controls.Add(button1);
             Controls.Add(checkSongsPanel);
             Controls.Add(saveScrollPos);
@@ -674,7 +649,6 @@
             Controls.Add(flagButton);
             Controls.Add(playButton);
             Controls.Add(controlPanel);
-            Controls.Add(trackBar1);
             KeyPreview = true;
             Name = "Form1";
             Text = "Form1";
@@ -694,7 +668,6 @@
             lyricsBoxContextMenu.ResumeLayout(false);
             checkSongsPanel.ResumeLayout(false);
             checkSongsPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBar1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -757,7 +730,5 @@
         private Panel lyricTextBoxOutline;
         private System.Windows.Forms.Timer updateTimer;
         private Button button1;
-        private TrackBar trackBar1;
-        private Label label2;
     }
 }
