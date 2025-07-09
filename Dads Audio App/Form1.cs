@@ -291,7 +291,7 @@ namespace Dads_Audio_App
             mainLineButton.MouseUp += mainLineButton_MouseUp;
             mainLineButton.MouseMove += mainLineButton_MouseMove;
 
-            
+
             this.Controls.Add(mainLineButton);
             mainLineButton.Visible = false;
 
@@ -2121,16 +2121,15 @@ namespace Dads_Audio_App
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            setControlSizes();
+            setControlSizes(0.78);
         }
 
-        private void setControlSizes()
+        private void setControlSizes(double y_scale)
         {
             System.Drawing.Rectangle workingSize = Screen.PrimaryScreen.WorkingArea;
             workingSize.Height = (int)(workingSize.Height * 0.92);
-            double y_scale = 0.82;
             setTreePanelAndChildrenSizes(new Point((int)(workingSize.Width * 0.01), treePanel.Location.Y), new Size((int)(workingSize.Width * 0.35), (int)(workingSize.Height * y_scale)));
-            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * (y_scale) + playButton.Height*2)), new Size(workingSize.Width, (int)(workingSize.Height * (1- y_scale))));
+            setControlPanelAndChildrenSizes(new Point(0, (int)(workingSize.Height * (y_scale) + playButton.Height * 2)), new Size(workingSize.Width, (int)(workingSize.Height * (1 - y_scale))));
             setTextPanelSizes();
         }
 
@@ -2535,7 +2534,7 @@ namespace Dads_Audio_App
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if(themesList.Count > 0)
+            if (themesList.Count > 0)
             {
                 applyTheme(themesList[0]);
             }
@@ -2549,6 +2548,18 @@ namespace Dads_Audio_App
             //}
 
             themesList.Add(new Theme(Color.FromArgb(17, 21, 38), Color.FromArgb(24, 30, 54), Color.FromArgb(0, 126, 249), Color.FromArgb(46, 51, 73)));
+        }
+
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+
+        }
+
+        private void trackBar1_ValueChanged_1(object sender, EventArgs e)
+        {
+            double y_value = trackBar1.Value / 100.0;
+            label2.Text = y_value.ToString();
+            setControlSizes(y_value);
         }
     }
 }
