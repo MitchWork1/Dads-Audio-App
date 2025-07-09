@@ -2179,7 +2179,7 @@ namespace Dads_Audio_App
                 audioBar.Size = new Size((int)(controlPanelSize.Width * 0.958), audioBar.Height);
                 audioBar.Location = new Point((int)(workingSize.Width * 0.02), audioBar.Location.Y);
                 mainLine.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y - 25);
-                mainLineButton.Location = new Point(audioBar.Location.X - 9 , controlPanel.Location.Y + audioBar.Location.Y + 75);
+                mainLineButton.Location = new Point(audioBar.Location.X, controlPanel.Location.Y + audioBar.Location.Y + 75);
                 currentTimeLabel.Location = new Point(audioBar.Location.X, (int)(controlPanelLocation.Y + mainLine.Size.Height * 1.2 + mainLineButton.Size.Height));
                 playButton.Location = new Point(audioBar.Location.X, controlPanelLocation.Y - 30);
                 flagButton.Location = new Point(playButton.Location.X + playButton.Size.Width + 7, playButton.Location.Y);
